@@ -156,8 +156,8 @@
 
     <script>
         // ================= CONFIGURATION =================
-        // ใส่ API Key ของ Finnhub ตรงนี้ (เพื่อดึงราคาหุ้นจริง)
-        const FINNHUB_API_KEY = ''; 
+        // ใส่ API Key ของ Finnhub ตรงนี้
+        const FINNHUB_API_KEY = 'd7ub5jpr01qnv95muqpgd7ub5jpr01qnv95muqq0'; 
         // =================================================
 
         document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -171,11 +171,19 @@
 
         let portfolio = JSON.parse(localStorage.getItem('wealthPortfolioUnits')) || {
             bank: 45000,
-            stocks: [{ ticker: 'MSFT', units: 120 }, { ticker: 'LLY', units: 45 }, { ticker: 'ASTS', units: 850 }],
-            crypto: [{ ticker: 'BTC', units: 1.5 }, { ticker: 'ETH', units: 12 }]
+            stocks: [
+                { ticker: 'MSFT', units: 120 }, 
+                { ticker: 'LLY', units: 45 }, 
+                { ticker: 'ABBV', units: 150 }, 
+                { ticker: 'ASTS', units: 850 }
+            ],
+            crypto: [
+                { ticker: 'BTC', units: 1.5 }, 
+                { ticker: 'ETH', units: 12 }
+            ]
         };
 
-        const fallbackPrices = { 'MSFT': 415.50, 'LLY': 760.20, 'ASTS': 28.50, 'BTC': 64000, 'ETH': 3100 };
+        const fallbackPrices = { 'MSFT': 415.50, 'LLY': 760.20, 'ABBV': 162.80, 'ASTS': 28.50, 'BTC': 64000, 'ETH': 3100 };
 
         // 1. Fetch JPY Exchange Rate
         async function fetchExchangeRate() {
@@ -247,7 +255,6 @@
         function formatMoney(usdValue, isPrice = false) {
             if (currentCurrency === 'JPY') {
                 let jpyValue = usdValue * jpyRate;
-                // ราคาหุ้นรายตัวอาจจะมีทศนิยม แต่พอร์ตรวมเยนมักจะไม่มี
                 return '¥' + jpyValue.toLocaleString('ja-JP', { maximumFractionDigits: isPrice ? 2 : 0 });
             } else {
                 return '$' + usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
