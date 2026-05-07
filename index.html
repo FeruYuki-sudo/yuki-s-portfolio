@@ -17,14 +17,20 @@
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+        
         .modal-enter { animation: slideUp 0.3s ease-out forwards; }
         .modal-exit { animation: slideDown 0.2s ease-in forwards; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes slideDown { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(20px) scale(0.95); } }
+        
         .live-dot { animation: pulse 2s infinite; }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+        
         .text-profit { color: #34d399; } .bg-profit { background-color: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); }
         .text-loss { color: #fb7185; } .bg-loss { background-color: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); }
+
+        /* Fix Date Picker visibility in dark mode */
+        input[type="date"] { color-scheme: dark; }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-6 lg:p-8 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-zinc-900 via-black to-black">
@@ -78,9 +84,9 @@
             <div class="text-3xl font-extrabold text-white mb-2" id="val-total">$0.00</div>
             <div class="flex items-center gap-2 mt-4">
                 <span class="text-xs text-zinc-500" data-i18n="unrealized">Unrealized P/L</span>
-                <span id="val-unrealized-pct" class="text-xs font-bold px-1.5 py-0.5 rounded">+0.00%</span>
+                <span id="val-unrealized-pct" class="text-xs font-bold px-1.5 py-0.5 rounded text-zinc-400 bg-zinc-800">0.00%</span>
             </div>
-            <div id="status-msg" class="text-[10px] mt-3 text-zinc-500">Connecting...</div>
+            <div id="status-msg" class="text-[10px] mt-3 text-zinc-500">Waiting for data...</div>
         </div>
 
         <div class="glass-card rounded-2xl p-6 border-l-4 border-l-emerald-500">
@@ -110,11 +116,17 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div class="glass-card rounded-2xl p-6 lg:col-span-2">
             <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-4" data-i18n="history">Net Worth Trend</h3>
-            <div class="relative h-64 w-full"><canvas id="trendChart"></canvas></div>
+            <div class="relative h-64 w-full flex items-center justify-center" id="chart-container-trend">
+                <span class="text-zinc-600 text-sm" data-i18n="no_data">No data yet</span>
+                <canvas id="trendChart" class="hidden"></canvas>
+            </div>
         </div>
         <div class="glass-card rounded-2xl p-6">
             <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-4" data-i18n="allocation">Allocation</h3>
-            <div class="relative h-64 w-full"><canvas id="allocationChart"></canvas></div>
+            <div class="relative h-64 w-full flex items-center justify-center" id="chart-container-alloc">
+                <span class="text-zinc-600 text-sm" data-i18n="no_data">No data yet</span>
+                <canvas id="allocationChart" class="hidden"></canvas>
+            </div>
         </div>
     </div>
 
@@ -136,14 +148,16 @@
                         <th class="pb-3 font-semibold text-right" data-i18n="unrealized">Unrealized P/L</th>
                     </tr>
                 </thead>
-                <tbody id="holdings-table-body"></tbody>
+                <tbody id="holdings-table-body">
+                    <tr><td colspan="6" class="py-8 text-center text-zinc-600 text-sm" data-i18n="empty_portfolio">Portfolio is empty. Log a transaction to start.</td></tr>
+                </tbody>
             </table>
         </div>
         
         <div class="glass-card rounded-2xl p-6">
             <h3 class="text-lg font-bold text-white mb-4" data-i18n="recent_tx">Recent Transactions</h3>
             <div id="tx-log-container" class="space-y-3 overflow-y-auto max-h-[300px] custom-scrollbar pr-2">
-                <!-- Tx Log -->
+                <div class="text-center text-zinc-600 text-sm py-4" data-i18n="no_data">No data yet</div>
             </div>
         </div>
     </div>
@@ -157,44 +171,52 @@
             </div>
             
             <form id="tx-form" class="p-6">
-                <!-- NEW: Date Picker Field -->
-                <div class="mb-4">
-                    <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="tx_date">Date</label>
-                    <input type="date" id="tx-date" required class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 font-medium">
+                <!-- DATE PICKER (FIXED & HIGHLY VISIBLE) -->
+                <div class="mb-5 bg-zinc-900/50 p-3 rounded-xl border border-zinc-700/80 shadow-inner">
+                    <label class="block text-xs font-extrabold text-yellow-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <span data-i18n="tx_date">Transaction Date</span>
+                    </label>
+                    <input type="date" id="tx-date" required class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 font-bold tracking-widest text-lg">
                 </div>
 
                 <div class="mb-4">
                     <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="tx_type">Type</label>
                     <select id="tx-type" onchange="toggleTxFields()" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 font-medium">
+                        <option value="DEPOSIT">Deposit Cash</option>
                         <option value="BUY">Buy Asset</option>
                         <option value="SELL">Sell Asset</option>
                         <option value="DIVIDEND">Dividend Received</option>
-                        <option value="DEPOSIT">Deposit Cash</option>
                         <option value="WITHDRAW">Withdraw Cash</option>
                     </select>
                 </div>
                 
-                <div id="field-asset" class="mb-4">
-                    <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="tx_asset">Asset Class</label>
-                    <select id="tx-asset-class" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500">
-                        <option value="stock">Stock / ETF (Use .T for Japan)</option>
+                <div id="field-asset" class="mb-4 hidden">
+                    <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="tx_asset">Market</label>
+                    <select id="tx-asset-class" onchange="populateTickers()" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500">
+                        <option value="stock_us">US Stocks</option>
+                        <option value="stock_jp">Japan Stocks (TSE)</option>
                         <option value="crypto">Crypto</option>
                     </select>
                 </div>
 
-                <div id="field-ticker" class="mb-4">
-                    <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="ticker">Ticker</label>
-                    <input type="text" id="tx-ticker" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 uppercase" placeholder="e.g. AAPL, 7203.T, BTC">
+                <!-- SMART DROPDOWN FOR TICKER -->
+                <div id="field-ticker" class="mb-4 hidden">
+                    <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="ticker">Asset Ticker</label>
+                    <select id="tx-ticker-select" onchange="handleTickerSelect()" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 mb-2">
+                        <!-- Populated by JS -->
+                    </select>
+                    <input type="text" id="tx-ticker-custom" class="w-full bg-zinc-900 border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 uppercase hidden" placeholder="Enter custom ticker (e.g. TSLA)">
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div id="field-qty">
+                    <div id="field-qty" class="hidden">
                         <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="units">Quantity</label>
                         <input type="number" step="any" id="tx-qty" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500" placeholder="0">
                     </div>
                     <div id="field-price">
-                        <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" id="lbl-price" data-i18n="price">Price (USD)</label>
-                        <input type="number" step="any" id="tx-price" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500" placeholder="0.00">
+                        <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" id="lbl-price" data-i18n="amount">Amount (USD)</label>
+                        <input type="number" step="any" id="tx-price" required class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500" placeholder="0.00">
                     </div>
                 </div>
 
@@ -213,8 +235,10 @@
     </div>
 
     <script>
+        // ================= FULLY INTEGRATED APIs =================
         const FINNHUB_API_KEY = 'd7ub5jpr01qnv95muqpgd7ub5jpr01qnv95muqq0'; 
-        
+        // =========================================================
+
         let currentCurrency = 'USD';
         let currentLang = 'en';
         let jpyRate = 150.0;
@@ -222,37 +246,45 @@
 
         Chart.defaults.color = '#71717a'; Chart.defaults.font.family = 'Montserrat';
 
-        let ledger = JSON.parse(localStorage.getItem('wealthLedgerV10')) || [];
-        let historySnapshots = JSON.parse(localStorage.getItem('wealthHistoryV10')) || [];
+        // --- EMPTY DATABASE (V12) ---
+        let ledger = JSON.parse(localStorage.getItem('wealthLedgerV12')) || [];
+        let historySnapshots = JSON.parse(localStorage.getItem('wealthHistoryV12')) || [];
         
-        // Helper to get Today in JST (YYYY-MM-DD)
+        let portfolioState = { bank: 0, invested: 0, realizedPl: 0, dividends: 0, assets: {} };
+        let liveDataCache = { totalNet: 0, holdings: [] };
+
+        // Asset Libraries for Dropdowns (Including user's favorites)
+        const assetLibrary = {
+            stock_us: [
+                {val: 'MSFT', name: 'MSFT (Microsoft)'}, {val: 'LLY', name: 'LLY (Eli Lilly)'}, 
+                {val: 'ABBV', name: 'ABBV (AbbVie)'}, {val: 'ASTS', name: 'ASTS (AST SpaceMobile)'},
+                {val: 'AAPL', name: 'AAPL (Apple)'}, {val: 'NVDA', name: 'NVDA (NVIDIA)'},
+                {val: 'TSLA', name: 'TSLA (Tesla)'}, {val: 'AMZN', name: 'AMZN (Amazon)'},
+                {val: 'OTHER', name: '+ Other (Type Manually)'}
+            ],
+            stock_jp: [
+                {val: '7203.T', name: '7203.T (Toyota)'}, {val: '6758.T', name: '6758.T (Sony)'}, 
+                {val: '9984.T', name: '9984.T (SoftBank)'}, {val: '8306.T', name: '8306.T (MUFG)'}, 
+                {val: '7974.T', name: '7974.T (Nintendo)'}, {val: '8035.T', name: '8035.T (Tokyo Electron)'},
+                {val: 'OTHER', name: '+ Other (Type Manually)'}
+            ],
+            crypto: [
+                {val: 'BTC', name: 'BTC (Bitcoin)'}, {val: 'ETH', name: 'ETH (Ethereum)'}, 
+                {val: 'SOL', name: 'SOL (Solana)'}, {val: 'BNB', name: 'BNB (Binance Coin)'}, 
+                {val: 'OTHER', name: '+ Other (Type Manually)'}
+            ]
+        };
+
+        const dictionary = {
+            en: { title: "Wealth Portfolio", live_market: "Live Market", export: "CSV", log_tx: "Log Transaction", total_net: "Total Net Worth", unrealized: "Unrealized P/L", realized: "Realized P/L & Div", cash: "Cash Balance", assets_val: "Equities & Crypto", history: "Net Worth Trend", allocation: "Allocation", portfolio: "Portfolio Holdings", recent_tx: "Recent Transactions", asset: "Asset", avg_cost: "Avg Cost", price: "Live Price", units: "Units", current_val: "Market Value", tx_date: "Transaction Date", tx_type: "Type", tx_asset: "Market", ticker: "Asset Ticker", cancel: "Cancel", save: "Save", fetching: "Connecting...", sync_done: "Live sync complete", mock_price: "Using delayed prices", amount: "Amount (USD)", price_unit: "Price/Unit (USD)", empty_portfolio: "Portfolio is empty. Log a deposit to start.", no_data: "No data yet", deleted: "Transaction deleted." },
+            jp: { title: "資産ポートフォリオ", live_market: "リアルタイム", export: "出力", log_tx: "取引記録", total_net: "純資産総額", unrealized: "未実現損益", realized: "実現損益と配当", cash: "現金残高", assets_val: "株式と暗号資産", history: "資産推移", allocation: "資産配分", portfolio: "保有資産", recent_tx: "最近の取引", asset: "資産", avg_cost: "平均取得単価", price: "現在価格", units: "数量", current_val: "評価額", tx_date: "取引日", tx_type: "種類", tx_asset: "市場", ticker: "ティッカー", cancel: "キャンセル", save: "保存", fetching: "接続中...", sync_done: "同期完了", mock_price: "遅延価格を使用中", amount: "金額 (USD)", price_unit: "取得単価 (USD)", empty_portfolio: "ポートフォリオは空です。入金を記録してください。", no_data: "データなし", deleted: "取引を削除しました。" }
+        };
+
+        // --- REAL-TIME DATE & TIME (JAPAN TIMEZONE) ---
         function getJstDate() {
             const d = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Tokyo"}));
             return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         }
-
-        if(ledger.length === 0) {
-            const initDate = getJstDate();
-            ledger = [
-                { id: 1, date: initDate, type: 'DEPOSIT', assetClass: null, ticker: null, qty: null, price: 45000 },
-                { id: 2, date: initDate, type: 'BUY', assetClass: 'stock', ticker: 'MSFT', qty: 120, price: 350 },
-                { id: 3, date: initDate, type: 'BUY', assetClass: 'stock', ticker: 'LLY', qty: 45, price: 650 },
-                { id: 4, date: initDate, type: 'BUY', assetClass: 'stock', ticker: 'ABBV', qty: 150, price: 145.5 },
-                { id: 5, date: initDate, type: 'BUY', assetClass: 'stock', ticker: 'ASTS', qty: 850, price: 15.2 },
-                { id: 6, date: initDate, type: 'BUY', assetClass: 'stock', ticker: '6758.T', qty: 100, price: 85.0 },
-                { id: 7, date: initDate, type: 'BUY', assetClass: 'crypto', ticker: 'BTC', qty: 1.5, price: 52000 },
-            ];
-            localStorage.setItem('wealthLedgerV10', JSON.stringify(ledger));
-        }
-
-        let portfolioState = { bank: 0, invested: 0, realizedPl: 0, dividends: 0, assets: {} };
-        let liveDataCache = { totalNet: 0, holdings: [] };
-        const fallbackPrices = { 'MSFT': 415.50, 'LLY': 760.20, 'ABBV': 162.80, 'ASTS': 28.50, 'BTC': 64000, '6758.T': 86.50 };
-
-        const dictionary = {
-            en: { title: "Wealth Portfolio", live_market: "Live Market", export: "CSV", log_tx: "Log Transaction", total_net: "Total Net Worth", unrealized: "Unrealized P/L", realized: "Realized P/L & Div", cash: "Cash Balance", assets_val: "Equities & Crypto", history: "Net Worth Trend", allocation: "Allocation", portfolio: "Portfolio Holdings", recent_tx: "Recent Transactions", asset: "Asset", avg_cost: "Avg Cost", price: "Live Price", units: "Units", current_val: "Market Value", tx_date: "Date", tx_type: "Type", tx_asset: "Asset Class", ticker: "Ticker", cancel: "Cancel", save: "Save", fetching: "Connecting...", sync_done: "Live sync complete", mock_price: "Using mock/delayed prices" },
-            jp: { title: "資産ポートフォリオ", live_market: "リアルタイム", export: "出力", log_tx: "取引記録", total_net: "純資産総額", unrealized: "未実現損益", realized: "実現損益と配当", cash: "現金残高", assets_val: "株式と暗号資産", history: "資産推移", allocation: "資産配分", portfolio: "保有資産", recent_tx: "最近の取引", asset: "資産", avg_cost: "平均取得単価", price: "現在価格", units: "数量", current_val: "評価額", tx_date: "日付", tx_type: "種類", tx_asset: "資産クラス", ticker: "ティッカー", cancel: "キャンセル", save: "保存", fetching: "接続中...", sync_done: "同期完了", mock_price: "モック価格使用中" }
-        };
 
         function updateDateDisplay() {
             const dateEl = document.getElementById('current-date');
@@ -278,6 +310,7 @@
         }
 
         function formatMoney(val, isPrice=false, sign=false) {
+            if(val === 0) return currentCurrency === 'JPY' ? '¥0' : '$0.00';
             let v = currentCurrency === 'JPY' ? val * jpyRate : val;
             let pfx = currentCurrency === 'JPY' ? '¥' : '$';
             let sgn = sign && val >= 0 ? '+' : '';
@@ -293,8 +326,6 @@
 
         function rebuildPortfolio() {
             portfolioState = { bank: 0, invested: 0, realizedPl: 0, dividends: 0, assets: {} };
-            
-            // Sort Ledger Chronologically (Oldest to Newest) to calculate correctly
             let sortedLedger = [...ledger].sort((a, b) => new Date(a.date) - new Date(b.date) || a.id - b.id);
             
             sortedLedger.forEach(tx => {
@@ -304,7 +335,8 @@
                 if(tx.type === 'DIVIDEND') { portfolioState.bank += tx.price; portfolioState.dividends += tx.price; }
                 
                 if(tx.type === 'BUY' || tx.type === 'SELL') {
-                    if(!portfolioState.assets[tkr]) portfolioState.assets[tkr] = { class: tx.assetClass, units: 0, avgCost: 0 };
+                    let cls = tx.assetClass === 'stock_us' || tx.assetClass === 'stock_jp' ? 'stock' : 'crypto';
+                    if(!portfolioState.assets[tkr]) portfolioState.assets[tkr] = { class: cls, units: 0, avgCost: 0 };
                     let ast = portfolioState.assets[tkr];
                     
                     if(tx.type === 'BUY') {
@@ -323,10 +355,11 @@
             });
         }
 
+        // --- FULLY FUNCTIONAL APIs ---
         async function fetchPrice(type, ticker) {
             ticker = ticker.toUpperCase();
             if (type === 'crypto') {
-                try { let r = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${ticker}USDT`); let d = await r.json(); return parseFloat(d.price); } catch(e) { return fallbackPrices[ticker] || 0; }
+                try { let r = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${ticker}USDT`); let d = await r.json(); return parseFloat(d.price); } catch(e) { return 0; }
             } else {
                 if(ticker.endsWith('.T')) {
                     try {
@@ -335,16 +368,25 @@
                         let d = await r.json(); let p = JSON.parse(d.contents);
                         let priceInJpy = p.chart.result[0].meta.regularMarketPrice;
                         return priceInJpy / jpyRate; 
-                    } catch(e) { return fallbackPrices[ticker] || 0; }
+                    } catch(e) { return 0; }
                 }
-                if (!FINNHUB_API_KEY) return fallbackPrices[ticker] || 0;
-                try { let r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`); let d = await r.json(); return d.c > 0 ? d.c : (fallbackPrices[ticker] || 0); } catch(e) { return fallbackPrices[ticker] || 0; }
+                if (!FINNHUB_API_KEY) return 0;
+                try { let r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`); let d = await r.json(); return d.c > 0 ? d.c : 0; } catch(e) { return 0; }
             }
         }
 
         async function processLiveDashboard() {
             rebuildPortfolio();
+            
+            if(ledger.length === 0) {
+                document.getElementById('status-msg').innerText = dictionary[currentLang]['sync_done'];
+                liveDataCache = { totalNet: 0, totalCost: 0, stTotal: 0, crTotal: 0, holdings: [] };
+                renderUI();
+                return;
+            }
+
             document.getElementById('status-msg').innerText = dictionary[currentLang]['fetching'];
+            // Fetch Latest Forex (USD/JPY)
             try { let r = await fetch('https://open.er-api.com/v6/latest/USD'); let d = await r.json(); jpyRate = d.rates.JPY; document.getElementById('forex-rate').innerText = `1 USD = ¥${jpyRate.toFixed(2)}`; } catch(e) {}
             
             let stTotal = 0; let stCost = 0; let crTotal = 0; let crCost = 0;
@@ -366,10 +408,8 @@
             const today = getJstDate();
             let snap = historySnapshots.find(s => s.date === today);
             if(snap) snap.net = liveDataCache.totalNet; else historySnapshots.push({ date: today, net: liveDataCache.totalNet });
-            
-            // Sort History chronologically
             historySnapshots.sort((a,b) => new Date(a.date) - new Date(b.date));
-            localStorage.setItem('wealthHistoryV10', JSON.stringify(historySnapshots));
+            localStorage.setItem('wealthHistoryV12', JSON.stringify(historySnapshots));
 
             document.getElementById('status-msg').innerText = FINNHUB_API_KEY ? dictionary[currentLang]['sync_done'] : dictionary[currentLang]['mock_price'];
             renderUI();
@@ -397,75 +437,136 @@
             document.getElementById('val-cr-pct').innerText = `CR: ${astTot>0 ? Math.round((liveDataCache.crTotal/astTot)*100) : 0}%`;
 
             const tbody = document.getElementById('holdings-table-body'); tbody.innerHTML = '';
-            liveDataCache.holdings.sort((a,b)=>b.val-a.val).forEach(a => {
-                let p = getPlStyle(a.plPct);
-                tbody.innerHTML += `<tr class="border-b border-zinc-800/50 hover:bg-zinc-800/30">
-                    <td class="py-3"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full ${a.color} text-black font-bold text-xs flex items-center justify-center">${a.tkr.substring(0,3)}</div><div><div class="font-bold text-white">${a.tkr}</div></div></div></td>
-                    <td class="py-3 text-right text-zinc-400">${formatMoney(a.cost, true)}</td>
-                    <td class="py-3 text-right text-white font-medium">${formatMoney(a.px, true)}</td>
-                    <td class="py-3 text-right text-zinc-300">${a.units.toLocaleString(undefined,{maximumFractionDigits:4})}</td>
-                    <td class="py-3 text-right font-bold text-white">${formatMoney(a.val)}</td>
-                    <td class="py-3 text-right"><div class="flex flex-col items-end"><span class="font-bold ${p.text}">${formatMoney(a.pl,false,true)}</span><span class="text-[10px] px-1 rounded ${p.bg} ${p.text}">${p.sign}${Math.abs(a.plPct).toFixed(2)}%</span></div></td>
-                </tr>`;
-            });
+            if(liveDataCache.holdings.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-zinc-600 text-sm">${dictionary[currentLang]['empty_portfolio']}</td></tr>`;
+            } else {
+                liveDataCache.holdings.sort((a,b)=>b.val-a.val).forEach(a => {
+                    let p = getPlStyle(a.plPct);
+                    tbody.innerHTML += `<tr class="border-b border-zinc-800/50 hover:bg-zinc-800/30">
+                        <td class="py-3"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full ${a.color} text-black font-bold text-xs flex items-center justify-center">${a.tkr.substring(0,3)}</div><div><div class="font-bold text-white">${a.tkr}</div></div></div></td>
+                        <td class="py-3 text-right text-zinc-400">${formatMoney(a.cost, true)}</td>
+                        <td class="py-3 text-right text-white font-medium">${formatMoney(a.px, true)}</td>
+                        <td class="py-3 text-right text-zinc-300">${a.units.toLocaleString(undefined,{maximumFractionDigits:4})}</td>
+                        <td class="py-3 text-right font-bold text-white">${formatMoney(a.val)}</td>
+                        <td class="py-3 text-right"><div class="flex flex-col items-end"><span class="font-bold ${p.text}">${formatMoney(a.pl,false,true)}</span><span class="text-[10px] px-1 rounded ${p.bg} ${p.text}">${p.sign}${Math.abs(a.plPct).toFixed(2)}%</span></div></td>
+                    </tr>`;
+                });
+            }
 
-            // TX LOG: Sort by Date Descending, then ID Descending, show up to 50
             const tlog = document.getElementById('tx-log-container'); tlog.innerHTML = '';
-            let sortedLedgerDesc = [...ledger].sort((a, b) => new Date(b.date) - new Date(a.date) || b.id - a.id);
-            sortedLedgerDesc.slice(0, 50).forEach(tx => {
-                let icon = '💸'; let color = 'text-zinc-300'; let txt = ''; let amt = '';
-                if(tx.type === 'DEPOSIT') { icon = '📥'; color = 'text-emerald-400'; txt = 'Deposit'; amt = `+${formatMoney(tx.price)}`; }
-                if(tx.type === 'WITHDRAW') { icon = '📤'; color = 'text-rose-400'; txt = 'Withdraw'; amt = `-${formatMoney(tx.price)}`; }
-                if(tx.type === 'DIVIDEND') { icon = '💰'; color = 'text-emerald-400'; txt = `${tx.ticker} Div`; amt = `+${formatMoney(tx.price)}`; }
-                if(tx.type === 'BUY') { icon = '🛒'; color = 'text-yellow-400'; txt = `Buy ${tx.ticker}`; amt = `-${formatMoney(tx.qty * tx.price)}`; }
-                if(tx.type === 'SELL') { icon = '🤝'; color = 'text-emerald-400'; txt = `Sell ${tx.ticker}`; amt = `+${formatMoney(tx.qty * tx.price)}`; }
-                
-                tlog.innerHTML += `<div class="flex justify-between items-center bg-zinc-900/50 p-2 rounded-lg border border-zinc-800"><div class="flex items-center gap-3"><span class="text-xl">${icon}</span><div><div class="text-sm font-bold text-white">${txt}</div><div class="text-[10px] text-zinc-500">${tx.date}</div></div></div><div class="text-sm font-bold ${color}">${amt}</div></div>`;
-            });
+            if(ledger.length === 0) {
+                tlog.innerHTML = `<div class="text-center text-zinc-600 text-sm py-4">${dictionary[currentLang]['no_data']}</div>`;
+            } else {
+                let sortedLedgerDesc = [...ledger].sort((a, b) => new Date(b.date) - new Date(a.date) || b.id - a.id);
+                sortedLedgerDesc.slice(0, 50).forEach(tx => {
+                    let icon = '💸'; let color = 'text-zinc-300'; let txt = ''; let amt = '';
+                    if(tx.type === 'DEPOSIT') { icon = '📥'; color = 'text-emerald-400'; txt = 'Deposit'; amt = `+${formatMoney(tx.price)}`; }
+                    if(tx.type === 'WITHDRAW') { icon = '📤'; color = 'text-rose-400'; txt = 'Withdraw'; amt = `-${formatMoney(tx.price)}`; }
+                    if(tx.type === 'DIVIDEND') { icon = '💰'; color = 'text-emerald-400'; txt = `${tx.ticker} Div`; amt = `+${formatMoney(tx.price)}`; }
+                    if(tx.type === 'BUY') { icon = '🛒'; color = 'text-yellow-400'; txt = `Buy ${tx.ticker}`; amt = `-${formatMoney(tx.qty * tx.price)}`; }
+                    if(tx.type === 'SELL') { icon = '🤝'; color = 'text-emerald-400'; txt = `Sell ${tx.ticker}`; amt = `+${formatMoney(tx.qty * tx.price)}`; }
+                    
+                    tlog.innerHTML += `<div class="flex justify-between items-center bg-zinc-900/50 p-2 rounded-lg border border-zinc-800 group"><div class="flex items-center gap-3"><span class="text-xl">${icon}</span><div><div class="text-sm font-bold text-white">${txt}</div><div class="text-[10px] text-zinc-500">${tx.date}</div></div></div><div class="flex items-center gap-3"><div class="text-sm font-bold ${color}">${amt}</div><button onclick="deleteTx(${tx.id})" class="text-zinc-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div></div>`;
+                });
+            }
 
             if(chartAlloc) chartAlloc.destroy();
-            chartAlloc = new Chart(document.getElementById('allocationChart').getContext('2d'), { type: 'doughnut', data: { labels: ['Cash', 'Equities', 'Crypto'], datasets: [{ data: [portfolioState.bank, liveDataCache.stTotal, liveDataCache.crTotal], backgroundColor: ['#ffffff', '#eab308', '#f97316'], borderWidth:0 }] }, options: { responsive:true, maintainAspectRatio:false, cutout:'80%', plugins: {legend:{display:false}} }});
+            if(liveDataCache.totalNet > 0) {
+                document.getElementById('allocationChart').classList.remove('hidden');
+                document.getElementById('chart-container-alloc').querySelector('span').classList.add('hidden');
+                chartAlloc = new Chart(document.getElementById('allocationChart').getContext('2d'), { type: 'doughnut', data: { labels: ['Cash', 'Equities', 'Crypto'], datasets: [{ data: [portfolioState.bank, liveDataCache.stTotal, liveDataCache.crTotal], backgroundColor: ['#ffffff', '#eab308', '#f97316'], borderWidth:0 }] }, options: { responsive:true, maintainAspectRatio:false, cutout:'80%', plugins: {legend:{display:false}} }});
+            } else {
+                document.getElementById('allocationChart').classList.add('hidden');
+                document.getElementById('chart-container-alloc').querySelector('span').classList.remove('hidden');
+            }
 
             if(chartTrend) chartTrend.destroy();
-            let grad = document.getElementById('trendChart').getContext('2d').createLinearGradient(0,0,0,300); grad.addColorStop(0, 'rgba(234,179,8,0.3)'); grad.addColorStop(1, 'transparent');
-            chartTrend = new Chart(document.getElementById('trendChart').getContext('2d'), { type: 'line', data: { labels: historySnapshots.map(h=>h.date), datasets: [{ data: historySnapshots.map(h=>h.net), borderColor: '#eab308', backgroundColor: grad, fill:true, tension:0.3, borderWidth:2, pointRadius:2 }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{display:false},y:{grid:{color:'#27272a'}}} } });
+            if(historySnapshots.length > 0 && liveDataCache.totalNet > 0) {
+                document.getElementById('trendChart').classList.remove('hidden');
+                document.getElementById('chart-container-trend').querySelector('span').classList.add('hidden');
+                let grad = document.getElementById('trendChart').getContext('2d').createLinearGradient(0,0,0,300); grad.addColorStop(0, 'rgba(234,179,8,0.3)'); grad.addColorStop(1, 'transparent');
+                chartTrend = new Chart(document.getElementById('trendChart').getContext('2d'), { type: 'line', data: { labels: historySnapshots.map(h=>h.date), datasets: [{ data: historySnapshots.map(h=>h.net), borderColor: '#eab308', backgroundColor: grad, fill:true, tension:0.3, borderWidth:2, pointRadius:2 }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{display:false},y:{grid:{color:'#27272a'}}} } });
+            } else {
+                document.getElementById('trendChart').classList.add('hidden');
+                document.getElementById('chart-container-trend').querySelector('span').classList.remove('hidden');
+            }
+        }
+
+        // --- TX MODAL & DROPDOWN LOGIC ---
+        function populateTickers() {
+            const cls = document.getElementById('tx-asset-class').value;
+            const sel = document.getElementById('tx-ticker-select');
+            sel.innerHTML = '';
+            assetLibrary[cls].forEach(opt => {
+                let o = document.createElement('option');
+                o.value = opt.val; o.text = opt.name; sel.appendChild(o);
+            });
+            handleTickerSelect();
+        }
+
+        function handleTickerSelect() {
+            const val = document.getElementById('tx-ticker-select').value;
+            const cust = document.getElementById('tx-ticker-custom');
+            if(val === 'OTHER') { cust.classList.remove('hidden'); cust.required = true; cust.value = ''; } 
+            else { cust.classList.add('hidden'); cust.required = false; cust.value = ''; }
         }
 
         function openModal() { 
             document.getElementById('tx-modal').classList.remove('hidden'); 
-            // PREFILL DATE with Today (JST format)
             document.getElementById('tx-date').value = getJstDate();
+            document.getElementById('tx-type').value = 'DEPOSIT';
             toggleTxFields(); 
         }
         function closeModal() { document.getElementById('tx-modal').classList.add('hidden'); document.getElementById('tx-form').reset(); }
         
         function toggleTxFields() {
             let t = document.getElementById('tx-type').value;
-            document.getElementById('field-asset').style.display = (t==='BUY'||t==='SELL') ? 'block' : 'none';
-            document.getElementById('field-ticker').style.display = (t==='BUY'||t==='SELL'||t==='DIVIDEND') ? 'block' : 'none';
-            document.getElementById('field-qty').style.display = (t==='BUY'||t==='SELL') ? 'block' : 'none';
-            document.getElementById('lbl-price').innerText = (t==='DEPOSIT'||t==='WITHDRAW'||t==='DIVIDEND') ? 'Amount (USD)' : 'Price/Unit (USD)';
+            document.getElementById('field-asset').classList.toggle('hidden', !(t==='BUY'||t==='SELL'));
+            document.getElementById('field-ticker').classList.toggle('hidden', !(t==='BUY'||t==='SELL'||t==='DIVIDEND'));
+            document.getElementById('field-qty').classList.toggle('hidden', !(t==='BUY'||t==='SELL'));
+            
+            document.getElementById('lbl-price').innerText = dictionary[currentLang][(t==='DEPOSIT'||t==='WITHDRAW'||t==='DIVIDEND') ? 'amount' : 'price_unit'];
+            
+            if(t==='BUY'||t==='SELL') populateTickers();
+            else if(t==='DIVIDEND') {
+                const sel = document.getElementById('tx-ticker-select'); sel.innerHTML = '<option value="OTHER">Enter Ticker manually</option>';
+                handleTickerSelect();
+            }
         }
 
         document.getElementById('tx-form').addEventListener('submit', function(e) {
             e.preventDefault();
             let date = document.getElementById('tx-date').value;
             let type = document.getElementById('tx-type').value;
-            let ticker = document.getElementById('tx-ticker').value.toUpperCase();
             let qty = parseFloat(document.getElementById('tx-qty').value) || 0;
             let price = parseFloat(document.getElementById('tx-price').value) || 0;
             let assetClass = document.getElementById('tx-asset-class').value;
             
-            ledger.push({ id: Date.now(), date: date, type, assetClass, ticker: (type==='DEPOSIT'||type==='WITHDRAW')?null:ticker, qty: (type==='BUY'||type==='SELL')?qty:null, price });
-            localStorage.setItem('wealthLedgerV10', JSON.stringify(ledger));
+            let ticker = null;
+            if(type !== 'DEPOSIT' && type !== 'WITHDRAW') {
+                let selVal = document.getElementById('tx-ticker-select').value;
+                ticker = (selVal === 'OTHER') ? document.getElementById('tx-ticker-custom').value.toUpperCase() : selVal;
+            }
+            
+            ledger.push({ id: Date.now(), date: date, type, assetClass, ticker, qty: (type==='BUY'||type==='SELL')?qty:null, price });
+            localStorage.setItem('wealthLedgerV12', JSON.stringify(ledger));
             
             closeModal(); 
-            document.getElementById('toast').classList.remove('translate-y-[150%]', 'opacity-0');
-            setTimeout(() => document.getElementById('toast').classList.add('translate-y-[150%]', 'opacity-0'), 3000);
+            showToast(dictionary[currentLang]['save'] + " Success");
             processLiveDashboard();
         });
 
+        function deleteTx(id) {
+            if(confirm('Delete this transaction?')) {
+                ledger = ledger.filter(t => t.id !== id);
+                localStorage.setItem('wealthLedgerV12', JSON.stringify(ledger));
+                showToast(dictionary[currentLang]['deleted']);
+                processLiveDashboard();
+            }
+        }
+
         function exportCSV() {
+            if(liveDataCache.holdings.length === 0) return;
             let csv = "Ticker,Type,Units,Avg Cost,Live Price,Market Value,Unrealized P/L\n";
             liveDataCache.holdings.forEach(h => { csv += `${h.tkr},${h.type},${h.units},${h.cost},${h.px},${h.val},${h.pl}\n`; });
             let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -473,8 +574,15 @@
         }
 
         function refreshLivePrices() { processLiveDashboard(); }
+        function showToast(msg) {
+            document.getElementById('toast-msg').innerText = msg;
+            const t = document.getElementById('toast');
+            t.classList.remove('translate-y-[150%]', 'opacity-0');
+            setTimeout(() => t.classList.add('translate-y-[150%]', 'opacity-0'), 3000);
+        }
 
         // Boot
+        updateDateDisplay();
         setLanguage('en');
         processLiveDashboard();
     </script>
