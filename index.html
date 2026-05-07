@@ -31,15 +31,17 @@
 
     <!-- HEADER -->
     <header class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-5">
-        <div>
-            <div class="flex items-center gap-3 mb-2">
-                <h1 class="text-3xl font-extrabold tracking-tight gradient-text" data-i18n="title">Wealth Portfolio</h1>
+        <div class="flex flex-col gap-3">
+            <div class="flex items-center gap-3">
+                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight gradient-text" data-i18n="title">Wealth Portfolio</h1>
                 <span class="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-900 border border-zinc-800 rounded-full text-[10px] font-bold text-emerald-500 uppercase tracking-wider shadow-lg">
                     <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full live-dot"></span><span data-i18n="live_market">Live Market</span>
                 </span>
             </div>
-            <div class="flex items-center gap-2 text-zinc-400 bg-zinc-900/50 w-fit px-3 py-1.5 rounded-lg border border-zinc-800">
-                <span class="text-sm font-semibold tracking-wide" id="current-date">Loading...</span>
+            <!-- DATE DISPLAY (ชัดเจน จัดเต็ม ไม่หายแน่นอน!) -->
+            <div class="flex items-center gap-2 text-zinc-300 bg-zinc-900/80 w-fit px-4 py-2 rounded-lg border border-zinc-700 shadow-md">
+                <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span class="text-sm font-bold tracking-wide" id="current-date">Loading date & time...</span>
             </div>
         </div>
         
@@ -169,14 +171,14 @@
                 <div id="field-asset" class="mb-4">
                     <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="tx_asset">Asset Class</label>
                     <select id="tx-asset-class" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500">
-                        <option value="stock">Stock / ETF (Use .BK for SET)</option>
+                        <option value="stock">Stock / ETF (Use .T for Japan)</option>
                         <option value="crypto">Crypto</option>
                     </select>
                 </div>
 
                 <div id="field-ticker" class="mb-4">
                     <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="ticker">Ticker</label>
-                    <input type="text" id="tx-ticker" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 uppercase" placeholder="e.g. AAPL, PTT.BK, BTC">
+                    <input type="text" id="tx-ticker" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 uppercase" placeholder="e.g. AAPL, 7203.T, BTC">
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 mb-6">
@@ -214,11 +216,10 @@
 
         Chart.defaults.color = '#71717a'; Chart.defaults.font.family = 'Montserrat';
 
-        // --- LEDGER SYSTEM (V9) ---
-        let ledger = JSON.parse(localStorage.getItem('wealthLedgerV9')) || [];
-        let historySnapshots = JSON.parse(localStorage.getItem('wealthHistoryV9')) || [];
+        // --- LEDGER SYSTEM (V10) ---
+        let ledger = JSON.parse(localStorage.getItem('wealthLedgerV10')) || [];
+        let historySnapshots = JSON.parse(localStorage.getItem('wealthHistoryV10')) || [];
         
-        // Seed initial data if empty
         if(ledger.length === 0) {
             const today = new Date().toISOString().split('T')[0];
             ledger = [
@@ -227,27 +228,36 @@
                 { id: 3, date: today, type: 'BUY', assetClass: 'stock', ticker: 'LLY', qty: 45, price: 650 },
                 { id: 4, date: today, type: 'BUY', assetClass: 'stock', ticker: 'ABBV', qty: 150, price: 145.5 },
                 { id: 5, date: today, type: 'BUY', assetClass: 'stock', ticker: 'ASTS', qty: 850, price: 15.2 },
-                { id: 6, date: today, type: 'BUY', assetClass: 'crypto', ticker: 'BTC', qty: 1.5, price: 52000 },
+                { id: 6, date: today, type: 'BUY', assetClass: 'stock', ticker: '6758.T', qty: 100, price: 85.0 },
+                { id: 7, date: today, type: 'BUY', assetClass: 'crypto', ticker: 'BTC', qty: 1.5, price: 52000 },
             ];
-            localStorage.setItem('wealthLedgerV9', JSON.stringify(ledger));
+            localStorage.setItem('wealthLedgerV10', JSON.stringify(ledger));
         }
 
         let portfolioState = { bank: 0, invested: 0, realizedPl: 0, dividends: 0, assets: {} };
         let liveDataCache = { totalNet: 0, holdings: [] };
-
-        const fallbackPrices = { 'MSFT': 415.50, 'LLY': 760.20, 'ABBV': 162.80, 'ASTS': 28.50, 'BTC': 64000 };
+        const fallbackPrices = { 'MSFT': 415.50, 'LLY': 760.20, 'ABBV': 162.80, 'ASTS': 28.50, 'BTC': 64000, '6758.T': 86.50 };
 
         const dictionary = {
             en: { title: "Wealth Portfolio", live_market: "Live Market", export: "CSV", log_tx: "Log Transaction", total_net: "Total Net Worth", unrealized: "Unrealized P/L", realized: "Realized P/L & Div", cash: "Cash Balance", assets_val: "Equities & Crypto", history: "Net Worth Trend", allocation: "Allocation", portfolio: "Portfolio Holdings", recent_tx: "Recent Transactions", asset: "Asset", avg_cost: "Avg Cost", price: "Live Price", units: "Units", current_val: "Market Value", tx_type: "Type", tx_asset: "Asset Class", ticker: "Ticker", cancel: "Cancel", save: "Save", fetching: "Connecting...", sync_done: "Live sync complete", mock_price: "Using mock/delayed prices" },
             jp: { title: "資産ポートフォリオ", live_market: "リアルタイム", export: "出力", log_tx: "取引記録", total_net: "純資産総額", unrealized: "未実現損益", realized: "実現損益と配当", cash: "現金残高", assets_val: "株式と暗号資産", history: "資産推移", allocation: "資産配分", portfolio: "保有資産", recent_tx: "最近の取引", asset: "資産", avg_cost: "平均取得単価", price: "現在価格", units: "数量", current_val: "評価額", tx_type: "種類", tx_asset: "資産クラス", ticker: "ティッカー", cancel: "キャンセル", save: "保存", fetching: "接続中...", sync_done: "同期完了", mock_price: "モック価格使用中" }
         };
 
+        // --- REAL-TIME DATE & TIME ---
+        function updateDateDisplay() {
+            const dateEl = document.getElementById('current-date');
+            const now = new Date();
+            const options = { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' };
+            dateEl.innerText = now.toLocaleString(currentLang === 'jp' ? 'ja-JP' : 'en-US', options).toUpperCase();
+        }
+        setInterval(updateDateDisplay, 30000); // อัปเดตเวลาทุกๆ 30 วินาที
+
         function setLanguage(lang) {
             currentLang = lang;
             document.getElementById('btn-en').className = lang === 'en' ? "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white transition shadow" : "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition";
             document.getElementById('btn-jp').className = lang === 'jp' ? "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white transition shadow" : "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition";
             document.querySelectorAll('[data-i18n]').forEach(el => { if(dictionary[lang][el.getAttribute('data-i18n')]) el.innerText = dictionary[lang][el.getAttribute('data-i18n')]; });
-            document.getElementById('current-date').innerText = new Date().toLocaleDateString(lang === 'jp' ? 'ja-JP' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short' }).toUpperCase();
+            updateDateDisplay(); // สั่งให้อัปเดตภาษาของวันที่ทันที
         }
 
         function setCurrency(cur) {
@@ -271,7 +281,7 @@
             return { text: 'text-zinc-400', bg: 'bg-zinc-800', sign: '' };
         }
 
-        // --- ENGINE: Build Portfolio from Ledger ---
+        // --- ENGINE ---
         function rebuildPortfolio() {
             portfolioState = { bank: 0, invested: 0, realizedPl: 0, dividends: 0, assets: {} };
             ledger.forEach(tx => {
@@ -294,28 +304,26 @@
                         portfolioState.bank += (tx.qty * tx.price);
                         portfolioState.realizedPl += tx.qty * (tx.price - ast.avgCost);
                         ast.units -= tx.qty;
-                        if(ast.units <= 0.000001) { ast.units = 0; ast.avgCost = 0; } // Float precision fix
+                        if(ast.units <= 0.000001) { ast.units = 0; ast.avgCost = 0; }
                     }
                 }
             });
         }
 
-        // --- FETCH APIs ---
         async function fetchPrice(type, ticker) {
             ticker = ticker.toUpperCase();
             if (type === 'crypto') {
                 try { let r = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${ticker}USDT`); let d = await r.json(); return parseFloat(d.price); } catch(e) { return fallbackPrices[ticker] || 0; }
             } else {
-                // THAI STOCKS (.BK) VIA PUBLIC PROXY TO YAHOO FINANCE
-                if(ticker.endsWith('.BK')) {
+                if(ticker.endsWith('.T')) {
                     try {
                         let url = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`);
                         let r = await fetch(`https://api.allorigins.win/get?url=${url}`);
                         let d = await r.json(); let p = JSON.parse(d.contents);
-                        return p.chart.result[0].meta.regularMarketPrice; // Note: Returns THB, needs conversion to USD ideally. Assuming USD for simplicity in this demo.
-                    } catch(e) { return 0; }
+                        let priceInJpy = p.chart.result[0].meta.regularMarketPrice;
+                        return priceInJpy / jpyRate; 
+                    } catch(e) { return fallbackPrices[ticker] || 0; }
                 }
-                // US STOCKS VIA FINNHUB
                 if (!FINNHUB_API_KEY) return fallbackPrices[ticker] || 0;
                 try { let r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`); let d = await r.json(); return d.c > 0 ? d.c : (fallbackPrices[ticker] || 0); } catch(e) { return fallbackPrices[ticker] || 0; }
             }
@@ -340,24 +348,18 @@
                 holdings.push({ tkr, type: ast.class, units: ast.units, cost: ast.avgCost, px, val, pl, plPct: cost>0?(pl/cost)*100:0, color: ast.class==='stock'?'bg-yellow-500':'bg-orange-500' });
             }
 
-            liveDataCache = {
-                totalNet: portfolioState.bank + stTotal + crTotal,
-                totalCost: portfolioState.bank + stCost + crCost, // Book value
-                stTotal, crTotal, holdings
-            };
+            liveDataCache = { totalNet: portfolioState.bank + stTotal + crTotal, totalCost: portfolioState.bank + stCost + crCost, stTotal, crTotal, holdings };
 
-            // Save Snapshot for Chart
             const today = new Date().toISOString().split('T')[0];
             let snap = historySnapshots.find(s => s.date === today);
             if(snap) snap.net = liveDataCache.totalNet; else historySnapshots.push({ date: today, net: liveDataCache.totalNet });
-            localStorage.setItem('wealthHistoryV9', JSON.stringify(historySnapshots));
+            localStorage.setItem('wealthHistoryV10', JSON.stringify(historySnapshots));
 
             document.getElementById('status-msg').innerText = FINNHUB_API_KEY ? dictionary[currentLang]['sync_done'] : dictionary[currentLang]['mock_price'];
             renderUI();
         }
 
         function renderUI() {
-            // Cards
             document.getElementById('val-total').innerText = formatMoney(liveDataCache.totalNet);
             let unrlz = liveDataCache.totalNet - liveDataCache.totalCost;
             let unPct = liveDataCache.totalCost > 0 ? (unrlz / liveDataCache.totalCost) * 100 : 0;
@@ -378,7 +380,6 @@
             document.getElementById('val-eq-pct').innerText = `EQ: ${astTot>0 ? Math.round((liveDataCache.stTotal/astTot)*100) : 0}%`;
             document.getElementById('val-cr-pct').innerText = `CR: ${astTot>0 ? Math.round((liveDataCache.crTotal/astTot)*100) : 0}%`;
 
-            // Holdings Table
             const tbody = document.getElementById('holdings-table-body'); tbody.innerHTML = '';
             liveDataCache.holdings.sort((a,b)=>b.val-a.val).forEach(a => {
                 let p = getPlStyle(a.plPct);
@@ -392,7 +393,6 @@
                 </tr>`;
             });
 
-            // Tx Log
             const tlog = document.getElementById('tx-log-container'); tlog.innerHTML = '';
             [...ledger].reverse().slice(0, 15).forEach(tx => {
                 let icon = '💸'; let color = 'text-zinc-300'; let txt = ''; let amt = '';
@@ -405,7 +405,6 @@
                 tlog.innerHTML += `<div class="flex justify-between items-center bg-zinc-900/50 p-2 rounded-lg border border-zinc-800"><div class="flex items-center gap-3"><span class="text-xl">${icon}</span><div><div class="text-sm font-bold text-white">${txt}</div><div class="text-[10px] text-zinc-500">${tx.date}</div></div></div><div class="text-sm font-bold ${color}">${amt}</div></div>`;
             });
 
-            // Charts
             if(chartAlloc) chartAlloc.destroy();
             chartAlloc = new Chart(document.getElementById('allocationChart').getContext('2d'), { type: 'doughnut', data: { labels: ['Cash', 'Equities', 'Crypto'], datasets: [{ data: [portfolioState.bank, liveDataCache.stTotal, liveDataCache.crTotal], backgroundColor: ['#ffffff', '#eab308', '#f97316'], borderWidth:0 }] }, options: { responsive:true, maintainAspectRatio:false, cutout:'80%', plugins: {legend:{display:false}} }});
 
@@ -414,7 +413,6 @@
             chartTrend = new Chart(document.getElementById('trendChart').getContext('2d'), { type: 'line', data: { labels: historySnapshots.map(h=>h.date), datasets: [{ data: historySnapshots.map(h=>h.net), borderColor: '#eab308', backgroundColor: grad, fill:true, tension:0.3, borderWidth:2, pointRadius:2 }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{display:false},y:{grid:{color:'#27272a'}}} } });
         }
 
-        // --- MODAL & FORM ---
         function openModal() { document.getElementById('tx-modal').classList.remove('hidden'); toggleTxFields(); }
         function closeModal() { document.getElementById('tx-modal').classList.add('hidden'); document.getElementById('tx-form').reset(); }
         
@@ -435,7 +433,7 @@
             let assetClass = document.getElementById('tx-asset-class').value;
             
             ledger.push({ id: Date.now(), date: new Date().toISOString().split('T')[0], type, assetClass, ticker: (type==='DEPOSIT'||type==='WITHDRAW')?null:ticker, qty: (type==='BUY'||type==='SELL')?qty:null, price });
-            localStorage.setItem('wealthLedgerV9', JSON.stringify(ledger));
+            localStorage.setItem('wealthLedgerV10', JSON.stringify(ledger));
             
             closeModal(); 
             document.getElementById('toast').classList.remove('translate-y-[150%]', 'opacity-0');
@@ -443,7 +441,6 @@
             processLiveDashboard();
         });
 
-        // --- CSV EXPORT ---
         function exportCSV() {
             let csv = "Ticker,Type,Units,Avg Cost,Live Price,Market Value,Unrealized P/L\n";
             liveDataCache.holdings.forEach(h => { csv += `${h.tkr},${h.type},${h.units},${h.cost},${h.px},${h.val},${h.pl}\n`; });
