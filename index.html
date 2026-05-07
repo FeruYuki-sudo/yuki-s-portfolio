@@ -38,10 +38,10 @@
                     <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full live-dot"></span><span data-i18n="live_market">Live Market</span>
                 </span>
             </div>
-            <!-- DATE DISPLAY (ชัดเจน จัดเต็ม ไม่หายแน่นอน!) -->
+            <!-- DATE DISPLAY (JAPAN TIMEZONE) -->
             <div class="flex items-center gap-2 text-zinc-300 bg-zinc-900/80 w-fit px-4 py-2 rounded-lg border border-zinc-700 shadow-md">
-                <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                <span class="text-sm font-bold tracking-wide" id="current-date">Loading date & time...</span>
+                <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="text-sm font-bold tracking-wide" id="current-date">Loading Tokyo Time...</span>
             </div>
         </div>
         
@@ -157,6 +157,12 @@
             </div>
             
             <form id="tx-form" class="p-6">
+                <!-- NEW: Date Picker Field -->
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="tx_date">Date</label>
+                    <input type="date" id="tx-date" required class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 font-medium">
+                </div>
+
                 <div class="mb-4">
                     <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="tx_type">Type</label>
                     <select id="tx-type" onchange="toggleTxFields()" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 font-medium">
@@ -216,20 +222,25 @@
 
         Chart.defaults.color = '#71717a'; Chart.defaults.font.family = 'Montserrat';
 
-        // --- LEDGER SYSTEM (V10) ---
         let ledger = JSON.parse(localStorage.getItem('wealthLedgerV10')) || [];
         let historySnapshots = JSON.parse(localStorage.getItem('wealthHistoryV10')) || [];
         
+        // Helper to get Today in JST (YYYY-MM-DD)
+        function getJstDate() {
+            const d = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Tokyo"}));
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+
         if(ledger.length === 0) {
-            const today = new Date().toISOString().split('T')[0];
+            const initDate = getJstDate();
             ledger = [
-                { id: 1, date: today, type: 'DEPOSIT', assetClass: null, ticker: null, qty: null, price: 45000 },
-                { id: 2, date: today, type: 'BUY', assetClass: 'stock', ticker: 'MSFT', qty: 120, price: 350 },
-                { id: 3, date: today, type: 'BUY', assetClass: 'stock', ticker: 'LLY', qty: 45, price: 650 },
-                { id: 4, date: today, type: 'BUY', assetClass: 'stock', ticker: 'ABBV', qty: 150, price: 145.5 },
-                { id: 5, date: today, type: 'BUY', assetClass: 'stock', ticker: 'ASTS', qty: 850, price: 15.2 },
-                { id: 6, date: today, type: 'BUY', assetClass: 'stock', ticker: '6758.T', qty: 100, price: 85.0 },
-                { id: 7, date: today, type: 'BUY', assetClass: 'crypto', ticker: 'BTC', qty: 1.5, price: 52000 },
+                { id: 1, date: initDate, type: 'DEPOSIT', assetClass: null, ticker: null, qty: null, price: 45000 },
+                { id: 2, date: initDate, type: 'BUY', assetClass: 'stock', ticker: 'MSFT', qty: 120, price: 350 },
+                { id: 3, date: initDate, type: 'BUY', assetClass: 'stock', ticker: 'LLY', qty: 45, price: 650 },
+                { id: 4, date: initDate, type: 'BUY', assetClass: 'stock', ticker: 'ABBV', qty: 150, price: 145.5 },
+                { id: 5, date: initDate, type: 'BUY', assetClass: 'stock', ticker: 'ASTS', qty: 850, price: 15.2 },
+                { id: 6, date: initDate, type: 'BUY', assetClass: 'stock', ticker: '6758.T', qty: 100, price: 85.0 },
+                { id: 7, date: initDate, type: 'BUY', assetClass: 'crypto', ticker: 'BTC', qty: 1.5, price: 52000 },
             ];
             localStorage.setItem('wealthLedgerV10', JSON.stringify(ledger));
         }
@@ -239,25 +250,24 @@
         const fallbackPrices = { 'MSFT': 415.50, 'LLY': 760.20, 'ABBV': 162.80, 'ASTS': 28.50, 'BTC': 64000, '6758.T': 86.50 };
 
         const dictionary = {
-            en: { title: "Wealth Portfolio", live_market: "Live Market", export: "CSV", log_tx: "Log Transaction", total_net: "Total Net Worth", unrealized: "Unrealized P/L", realized: "Realized P/L & Div", cash: "Cash Balance", assets_val: "Equities & Crypto", history: "Net Worth Trend", allocation: "Allocation", portfolio: "Portfolio Holdings", recent_tx: "Recent Transactions", asset: "Asset", avg_cost: "Avg Cost", price: "Live Price", units: "Units", current_val: "Market Value", tx_type: "Type", tx_asset: "Asset Class", ticker: "Ticker", cancel: "Cancel", save: "Save", fetching: "Connecting...", sync_done: "Live sync complete", mock_price: "Using mock/delayed prices" },
-            jp: { title: "資産ポートフォリオ", live_market: "リアルタイム", export: "出力", log_tx: "取引記録", total_net: "純資産総額", unrealized: "未実現損益", realized: "実現損益と配当", cash: "現金残高", assets_val: "株式と暗号資産", history: "資産推移", allocation: "資産配分", portfolio: "保有資産", recent_tx: "最近の取引", asset: "資産", avg_cost: "平均取得単価", price: "現在価格", units: "数量", current_val: "評価額", tx_type: "種類", tx_asset: "資産クラス", ticker: "ティッカー", cancel: "キャンセル", save: "保存", fetching: "接続中...", sync_done: "同期完了", mock_price: "モック価格使用中" }
+            en: { title: "Wealth Portfolio", live_market: "Live Market", export: "CSV", log_tx: "Log Transaction", total_net: "Total Net Worth", unrealized: "Unrealized P/L", realized: "Realized P/L & Div", cash: "Cash Balance", assets_val: "Equities & Crypto", history: "Net Worth Trend", allocation: "Allocation", portfolio: "Portfolio Holdings", recent_tx: "Recent Transactions", asset: "Asset", avg_cost: "Avg Cost", price: "Live Price", units: "Units", current_val: "Market Value", tx_date: "Date", tx_type: "Type", tx_asset: "Asset Class", ticker: "Ticker", cancel: "Cancel", save: "Save", fetching: "Connecting...", sync_done: "Live sync complete", mock_price: "Using mock/delayed prices" },
+            jp: { title: "資産ポートフォリオ", live_market: "リアルタイム", export: "出力", log_tx: "取引記録", total_net: "純資産総額", unrealized: "未実現損益", realized: "実現損益と配当", cash: "現金残高", assets_val: "株式と暗号資産", history: "資産推移", allocation: "資産配分", portfolio: "保有資産", recent_tx: "最近の取引", asset: "資産", avg_cost: "平均取得単価", price: "現在価格", units: "数量", current_val: "評価額", tx_date: "日付", tx_type: "種類", tx_asset: "資産クラス", ticker: "ティッカー", cancel: "キャンセル", save: "保存", fetching: "接続中...", sync_done: "同期完了", mock_price: "モック価格使用中" }
         };
 
-        // --- REAL-TIME DATE & TIME ---
         function updateDateDisplay() {
             const dateEl = document.getElementById('current-date');
             const now = new Date();
-            const options = { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' };
-            dateEl.innerText = now.toLocaleString(currentLang === 'jp' ? 'ja-JP' : 'en-US', options).toUpperCase();
+            const options = { timeZone: 'Asia/Tokyo', year: 'numeric', month: 'short', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' };
+            dateEl.innerText = now.toLocaleString(currentLang === 'jp' ? 'ja-JP' : 'en-US', options).toUpperCase() + ' (JST)';
         }
-        setInterval(updateDateDisplay, 30000); // อัปเดตเวลาทุกๆ 30 วินาที
+        setInterval(updateDateDisplay, 30000);
 
         function setLanguage(lang) {
             currentLang = lang;
             document.getElementById('btn-en').className = lang === 'en' ? "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white transition shadow" : "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition";
             document.getElementById('btn-jp').className = lang === 'jp' ? "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white transition shadow" : "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition";
             document.querySelectorAll('[data-i18n]').forEach(el => { if(dictionary[lang][el.getAttribute('data-i18n')]) el.innerText = dictionary[lang][el.getAttribute('data-i18n')]; });
-            updateDateDisplay(); // สั่งให้อัปเดตภาษาของวันที่ทันที
+            updateDateDisplay(); 
         }
 
         function setCurrency(cur) {
@@ -281,10 +291,13 @@
             return { text: 'text-zinc-400', bg: 'bg-zinc-800', sign: '' };
         }
 
-        // --- ENGINE ---
         function rebuildPortfolio() {
             portfolioState = { bank: 0, invested: 0, realizedPl: 0, dividends: 0, assets: {} };
-            ledger.forEach(tx => {
+            
+            // Sort Ledger Chronologically (Oldest to Newest) to calculate correctly
+            let sortedLedger = [...ledger].sort((a, b) => new Date(a.date) - new Date(b.date) || a.id - b.id);
+            
+            sortedLedger.forEach(tx => {
                 let tkr = tx.ticker ? tx.ticker.toUpperCase() : null;
                 if(tx.type === 'DEPOSIT') { portfolioState.bank += tx.price; portfolioState.invested += tx.price; }
                 if(tx.type === 'WITHDRAW') { portfolioState.bank -= tx.price; portfolioState.invested -= tx.price; }
@@ -350,9 +363,12 @@
 
             liveDataCache = { totalNet: portfolioState.bank + stTotal + crTotal, totalCost: portfolioState.bank + stCost + crCost, stTotal, crTotal, holdings };
 
-            const today = new Date().toISOString().split('T')[0];
+            const today = getJstDate();
             let snap = historySnapshots.find(s => s.date === today);
             if(snap) snap.net = liveDataCache.totalNet; else historySnapshots.push({ date: today, net: liveDataCache.totalNet });
+            
+            // Sort History chronologically
+            historySnapshots.sort((a,b) => new Date(a.date) - new Date(b.date));
             localStorage.setItem('wealthHistoryV10', JSON.stringify(historySnapshots));
 
             document.getElementById('status-msg').innerText = FINNHUB_API_KEY ? dictionary[currentLang]['sync_done'] : dictionary[currentLang]['mock_price'];
@@ -393,8 +409,10 @@
                 </tr>`;
             });
 
+            // TX LOG: Sort by Date Descending, then ID Descending, show up to 50
             const tlog = document.getElementById('tx-log-container'); tlog.innerHTML = '';
-            [...ledger].reverse().slice(0, 15).forEach(tx => {
+            let sortedLedgerDesc = [...ledger].sort((a, b) => new Date(b.date) - new Date(a.date) || b.id - a.id);
+            sortedLedgerDesc.slice(0, 50).forEach(tx => {
                 let icon = '💸'; let color = 'text-zinc-300'; let txt = ''; let amt = '';
                 if(tx.type === 'DEPOSIT') { icon = '📥'; color = 'text-emerald-400'; txt = 'Deposit'; amt = `+${formatMoney(tx.price)}`; }
                 if(tx.type === 'WITHDRAW') { icon = '📤'; color = 'text-rose-400'; txt = 'Withdraw'; amt = `-${formatMoney(tx.price)}`; }
@@ -413,7 +431,12 @@
             chartTrend = new Chart(document.getElementById('trendChart').getContext('2d'), { type: 'line', data: { labels: historySnapshots.map(h=>h.date), datasets: [{ data: historySnapshots.map(h=>h.net), borderColor: '#eab308', backgroundColor: grad, fill:true, tension:0.3, borderWidth:2, pointRadius:2 }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{display:false},y:{grid:{color:'#27272a'}}} } });
         }
 
-        function openModal() { document.getElementById('tx-modal').classList.remove('hidden'); toggleTxFields(); }
+        function openModal() { 
+            document.getElementById('tx-modal').classList.remove('hidden'); 
+            // PREFILL DATE with Today (JST format)
+            document.getElementById('tx-date').value = getJstDate();
+            toggleTxFields(); 
+        }
         function closeModal() { document.getElementById('tx-modal').classList.add('hidden'); document.getElementById('tx-form').reset(); }
         
         function toggleTxFields() {
@@ -426,13 +449,14 @@
 
         document.getElementById('tx-form').addEventListener('submit', function(e) {
             e.preventDefault();
+            let date = document.getElementById('tx-date').value;
             let type = document.getElementById('tx-type').value;
             let ticker = document.getElementById('tx-ticker').value.toUpperCase();
             let qty = parseFloat(document.getElementById('tx-qty').value) || 0;
             let price = parseFloat(document.getElementById('tx-price').value) || 0;
             let assetClass = document.getElementById('tx-asset-class').value;
             
-            ledger.push({ id: Date.now(), date: new Date().toISOString().split('T')[0], type, assetClass, ticker: (type==='DEPOSIT'||type==='WITHDRAW')?null:ticker, qty: (type==='BUY'||type==='SELL')?qty:null, price });
+            ledger.push({ id: Date.now(), date: date, type, assetClass, ticker: (type==='DEPOSIT'||type==='WITHDRAW')?null:ticker, qty: (type==='BUY'||type==='SELL')?qty:null, price });
             localStorage.setItem('wealthLedgerV10', JSON.stringify(ledger));
             
             closeModal(); 
@@ -445,7 +469,7 @@
             let csv = "Ticker,Type,Units,Avg Cost,Live Price,Market Value,Unrealized P/L\n";
             liveDataCache.holdings.forEach(h => { csv += `${h.tkr},${h.type},${h.units},${h.cost},${h.px},${h.val},${h.pl}\n`; });
             let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Portfolio_${new Date().toISOString().split('T')[0]}.csv`; link.click();
+            let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Portfolio_${getJstDate()}.csv`; link.click();
         }
 
         function refreshLivePrices() { processLiveDashboard(); }
