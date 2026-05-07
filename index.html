@@ -13,7 +13,7 @@
     <style>
         body {
             font-family: 'Montserrat', sans-serif;
-            background-color: #09090b; /* Zinc 950 - โทนดำสนิท ไม่มีอมน้ำเงิน */
+            background-color: #09090b; /* Zinc 950 */
             color: #f4f4f5;
         }
         .glass-card {
@@ -21,6 +21,11 @@
             border: 1px solid #27272a; /* Zinc 800 */
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.7);
         }
+        /* Custom Scrollbar for sleek look */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #09090b; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ca8a04; }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">
@@ -37,61 +42,71 @@
         </div>
     </header>
 
-    <!-- Daily Data Input Section -->
+    <!-- Daily Data Input Section (Detailed) -->
     <div class="glass-card rounded-xl p-6 mb-8 border-l-4 border-l-yellow-600">
-        <h3 class="text-lg font-semibold mb-4 text-zinc-200" data-i18n="add_daily">Update Daily Record</h3>
-        <form id="daily-form" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-            <div>
-                <label class="block text-xs text-zinc-400 mb-1" data-i18n="date_label">Date</label>
-                <input type="date" id="input-date" required class="w-full bg-zinc-950 border border-zinc-700 text-white p-2.5 rounded focus:outline-none focus:border-yellow-500">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-semibold text-zinc-200" data-i18n="add_daily">Update Daily Record</h3>
+            <div class="flex items-center gap-3">
+                <label class="text-sm text-zinc-400" data-i18n="date_label">Date:</label>
+                <input type="date" id="input-date" required class="bg-zinc-950 border border-zinc-700 text-white p-2 rounded text-sm focus:outline-none focus:border-yellow-500">
             </div>
-            <div>
-                <label class="block text-xs text-zinc-400 mb-1" data-i18n="bank_label">Bank Balance</label>
-                <input type="number" id="input-bank" required class="w-full bg-zinc-950 border border-zinc-700 text-white p-2.5 rounded focus:outline-none focus:border-yellow-500">
+        </div>
+        
+        <form id="daily-form">
+            <!-- Bank Section -->
+            <div class="mb-6 pb-4 border-b border-zinc-800">
+                <label class="block text-sm font-medium text-zinc-400 mb-2" data-i18n="bank_label">Bank / Cash Total ($)</label>
+                <input type="number" id="input-bank" required class="w-full md:w-1/3 bg-zinc-950 border border-zinc-700 text-white p-2.5 rounded focus:outline-none focus:border-zinc-500">
             </div>
-            <div>
-                <label class="block text-xs text-zinc-400 mb-1" data-i18n="stocks_label">Stocks Balance</label>
-                <input type="number" id="input-stocks" required class="w-full bg-zinc-950 border border-zinc-700 text-white p-2.5 rounded focus:outline-none focus:border-yellow-500">
+
+            <!-- Stocks Section -->
+            <div class="mb-6 pb-4 border-b border-zinc-800">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-sm font-medium text-zinc-400" data-i18n="stocks_label">Equities (Stocks)</label>
+                    <button type="button" onclick="addAssetRow('stock')" class="text-xs font-semibold text-yellow-500 hover:text-yellow-400 border border-yellow-600/30 px-2 py-1 rounded transition">+ Add Stock</button>
+                </div>
+                <div id="stock-container" class="space-y-3"></div>
             </div>
-            <div>
-                <label class="block text-xs text-zinc-400 mb-1" data-i18n="crypto_label">Crypto Balance</label>
-                <input type="number" id="input-crypto" required class="w-full bg-zinc-950 border border-zinc-700 text-white p-2.5 rounded focus:outline-none focus:border-yellow-500">
+
+            <!-- Crypto Section -->
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-sm font-medium text-zinc-400" data-i18n="crypto_label">Digital Assets (Crypto)</label>
+                    <button type="button" onclick="addAssetRow('crypto')" class="text-xs font-semibold text-orange-500 hover:text-orange-400 border border-orange-600/30 px-2 py-1 rounded transition">+ Add Crypto</button>
+                </div>
+                <div id="crypto-container" class="space-y-3"></div>
             </div>
-            <div>
-                <button type="submit" class="w-full px-4 py-2.5 bg-gradient-to-r from-yellow-700 to-yellow-600 hover:from-yellow-600 hover:to-yellow-500 text-zinc-950 font-bold rounded transition shadow-lg" data-i18n="save_btn">Save Record</button>
-            </div>
+
+            <button type="submit" class="w-full px-4 py-3 bg-gradient-to-r from-yellow-700 to-yellow-600 hover:from-yellow-600 hover:to-yellow-500 text-zinc-950 font-bold rounded transition shadow-lg text-lg tracking-wide" data-i18n="save_btn">Save Record</button>
         </form>
     </div>
 
     <!-- Top Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <!-- Total -->
-        <div class="glass-card rounded-xl p-6">
+        <div class="glass-card rounded-xl p-6 relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-4 opacity-10 text-yellow-500"><svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
             <h3 class="text-zinc-400 text-sm font-medium mb-2" data-i18n="total_net">Total Net Worth</h3>
             <div class="text-3xl font-bold mb-1 text-white" id="val-total">$0</div>
             <div id="change-total" class="text-sm font-medium mt-2">--</div>
         </div>
-        <!-- Bank -->
         <div class="glass-card rounded-xl p-6 border-t-2 border-zinc-400">
             <h3 class="text-zinc-400 text-sm font-medium mb-2" data-i18n="bank">Bank / Cash</h3>
             <div class="text-2xl font-bold mb-1 text-white" id="val-bank">$0</div>
             <div class="text-zinc-500 text-sm font-medium" id="pct-bank">0%</div>
         </div>
-        <!-- Stocks -->
         <div class="glass-card rounded-xl p-6 border-t-2 border-yellow-600">
-            <h3 class="text-zinc-400 text-sm font-medium mb-2" data-i18n="stocks">Stock Balance</h3>
+            <h3 class="text-zinc-400 text-sm font-medium mb-2" data-i18n="stocks_sum">Equities Total</h3>
             <div class="text-2xl font-bold mb-1 text-white" id="val-stocks">$0</div>
             <div class="text-zinc-500 text-sm font-medium" id="pct-stocks">0%</div>
         </div>
-        <!-- Crypto -->
         <div class="glass-card rounded-xl p-6 border-t-2 border-orange-500">
-            <h3 class="text-zinc-400 text-sm font-medium mb-2" data-i18n="crypto">Crypto</h3>
+            <h3 class="text-zinc-400 text-sm font-medium mb-2" data-i18n="crypto_sum">Crypto Total</h3>
             <div class="text-2xl font-bold mb-1 text-white" id="val-crypto">$0</div>
             <div class="text-zinc-500 text-sm font-medium" id="pct-crypto">0%</div>
         </div>
     </div>
 
-    <!-- Charts Section -->
+    <!-- Charts & Holdings Section -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <!-- Allocation Donut Chart -->
         <div class="glass-card rounded-xl p-6 lg:col-span-1 flex flex-col justify-center">
@@ -110,53 +125,106 @@
         </div>
     </div>
 
+    <!-- Detailed Holdings Table -->
+    <div class="glass-card rounded-xl p-6 overflow-x-auto mb-12">
+        <h3 class="text-lg font-semibold mb-4 text-zinc-200" data-i18n="holdings">Current Holdings Breakdown</h3>
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="text-zinc-400 text-sm border-b border-zinc-800">
+                    <th class="pb-3 font-medium w-1/2">Asset Name</th>
+                    <th class="pb-3 font-medium">Type</th>
+                    <th class="pb-3 font-medium text-right">Value ($)</th>
+                </tr>
+            </thead>
+            <tbody id="holdings-table-body" class="text-sm">
+                <!-- Data will be injected here -->
+            </tbody>
+        </table>
+    </div>
+
     <script>
         // --- 1. Initial Setup & Data Management ---
-        // ตั้งค่าวันที่ปัจจุบันให้ Form
         document.getElementById('input-date').valueAsDate = new Date();
         document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-        // โหลดข้อมูลจาก LocalStorage ถ้าไม่มีให้ใช้ข้อมูลตัวอย่าง
-        let historyData = JSON.parse(localStorage.getItem('wealthHistory')) || [
-            { date: '2024-04-01', bank: 100000, stocks: 500000, crypto: 200000 },
-            { date: '2024-04-15', bank: 120000, stocks: 520000, crypto: 190000 }
+        // Load data V2 format
+        let historyData = JSON.parse(localStorage.getItem('wealthHistoryV2')) || [
+            { 
+                date: '2026-04-30', 
+                bank: 120000, 
+                stocks: [{name: 'MSFT', value: 250000}, {name: 'LLY', value: 180000}, {name: 'ABBV', value: 90000}, {name: 'ASTS', value: 35000}], 
+                crypto: [{name: 'BTC', value: 85000}, {name: 'ETH', value: 20000}] 
+            }
         ];
 
         let donutChartInstance = null;
         let lineChartInstance = null;
-        Chart.defaults.color = '#a1a1aa'; // Zinc 400
+        Chart.defaults.color = '#a1a1aa'; 
         Chart.defaults.font.family = 'Montserrat';
 
-        // --- 2. Update UI Functions ---
-        function formatMoney(num) {
-            return '$' + num.toLocaleString('en-US');
+        // --- 2. Dynamic Input Generation ---
+        function addAssetRow(type, name = '', value = '') {
+            const container = document.getElementById(`${type}-container`);
+            const row = document.createElement('div');
+            row.className = `flex gap-2 items-center ${type}-row`;
+            
+            row.innerHTML = `
+                <input type="text" placeholder="Name (e.g. AAPL)" value="${name}" required class="asset-name w-1/2 bg-zinc-950 border border-zinc-800 text-white p-2 rounded text-sm focus:outline-none focus:border-zinc-500">
+                <input type="number" placeholder="Amount" value="${value || ''}" required class="asset-value w-1/2 bg-zinc-950 border border-zinc-800 text-white p-2 rounded text-sm focus:outline-none focus:border-zinc-500">
+                <button type="button" onclick="this.parentElement.remove()" class="text-zinc-600 hover:text-red-500 px-2 py-2 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            `;
+            container.appendChild(row);
+        }
+
+        function loadFormWithLatestData() {
+            const latest = historyData[historyData.length - 1];
+            document.getElementById('input-bank').value = latest.bank;
+            
+            document.getElementById('stock-container').innerHTML = '';
+            latest.stocks.forEach(s => addAssetRow('stock', s.name, s.value));
+            if(latest.stocks.length === 0) addAssetRow('stock');
+
+            document.getElementById('crypto-container').innerHTML = '';
+            latest.crypto.forEach(c => addAssetRow('crypto', c.name, c.value));
+            if(latest.crypto.length === 0) addAssetRow('crypto');
+        }
+
+        // --- 3. UI and Charts Calculation ---
+        function formatMoney(num) { return '$' + num.toLocaleString('en-US'); }
+
+        function calculateSums(record) {
+            const bankSum = parseFloat(record.bank) || 0;
+            const stockSum = record.stocks.reduce((acc, curr) => acc + (parseFloat(curr.value) || 0), 0);
+            const cryptoSum = record.crypto.reduce((acc, curr) => acc + (parseFloat(curr.value) || 0), 0);
+            return { bank: bankSum, stocks: stockSum, crypto: cryptoSum, total: bankSum + stockSum + cryptoSum };
         }
 
         function updateDashboard() {
             if (historyData.length === 0) return;
-
-            // เรียงข้อมูลตามวันที่
             historyData.sort((a, b) => new Date(a.date) - new Date(b.date));
             const latest = historyData[historyData.length - 1];
             const previous = historyData.length > 1 ? historyData[historyData.length - 2] : latest;
 
-            const totalLatest = latest.bank + latest.stocks + latest.crypto;
-            const totalPrevious = previous.bank + previous.stocks + previous.crypto;
-            const diff = totalLatest - totalPrevious;
-            const diffPct = totalPrevious > 0 ? (diff / totalPrevious) * 100 : 0;
+            const sumsLatest = calculateSums(latest);
+            const sumsPrev = calculateSums(previous);
+            
+            const diff = sumsLatest.total - sumsPrev.total;
+            const diffPct = sumsPrev.total > 0 ? (diff / sumsPrev.total) * 100 : 0;
 
-            // อัปเดตตัวเลขในการ์ด
-            document.getElementById('val-total').innerText = formatMoney(totalLatest);
-            document.getElementById('val-bank').innerText = formatMoney(latest.bank);
-            document.getElementById('val-stocks').innerText = formatMoney(latest.stocks);
-            document.getElementById('val-crypto').innerText = formatMoney(latest.crypto);
+            // Cards
+            document.getElementById('val-total').innerText = formatMoney(sumsLatest.total);
+            document.getElementById('val-bank').innerText = formatMoney(sumsLatest.bank);
+            document.getElementById('val-stocks').innerText = formatMoney(sumsLatest.stocks);
+            document.getElementById('val-crypto').innerText = formatMoney(sumsLatest.crypto);
 
-            // อัปเดตเปอร์เซ็นต์สัดส่วน
-            document.getElementById('pct-bank').innerText = ((latest.bank / totalLatest) * 100).toFixed(1) + '%';
-            document.getElementById('pct-stocks').innerText = ((latest.stocks / totalLatest) * 100).toFixed(1) + '%';
-            document.getElementById('pct-crypto').innerText = ((latest.crypto / totalLatest) * 100).toFixed(1) + '%';
+            if(sumsLatest.total > 0) {
+                document.getElementById('pct-bank').innerText = ((sumsLatest.bank / sumsLatest.total) * 100).toFixed(1) + '%';
+                document.getElementById('pct-stocks').innerText = ((sumsLatest.stocks / sumsLatest.total) * 100).toFixed(1) + '%';
+                document.getElementById('pct-crypto').innerText = ((sumsLatest.crypto / sumsLatest.total) * 100).toFixed(1) + '%';
+            }
 
-            // อัปเดตตัวเลขกำไร/ขาดทุน
             const changeEl = document.getElementById('change-total');
             if (diff > 0) {
                 changeEl.innerHTML = `<span class="text-emerald-500">▲ +${formatMoney(diff)} (+${diffPct.toFixed(2)}%)</span>`;
@@ -166,40 +234,56 @@
                 changeEl.innerHTML = `<span class="text-zinc-500">No change</span>`;
             }
 
-            updateCharts(latest);
+            updateCharts(sumsLatest);
+            updateHoldingsTable(latest);
         }
 
-        // --- 3. Charts Logic ---
-        function updateCharts(latestData) {
+        function updateHoldingsTable(latestData) {
+            const tbody = document.getElementById('holdings-table-body');
+            tbody.innerHTML = '';
+            
+            // Combine and sort assets by value
+            let allAssets = [];
+            latestData.stocks.forEach(s => allAssets.push({...s, type: 'Stock', color: 'text-yellow-500'}));
+            latestData.crypto.forEach(c => allAssets.push({...c, type: 'Crypto', color: 'text-orange-500'}));
+            
+            allAssets.sort((a, b) => b.value - a.value);
+
+            allAssets.forEach(asset => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-zinc-800/50 hover:bg-zinc-800/30 transition';
+                tr.innerHTML = `
+                    <td class="py-3 font-semibold text-zinc-200">${asset.name}</td>
+                    <td class="py-3 ${asset.color} font-medium text-xs tracking-wider uppercase">${asset.type}</td>
+                    <td class="py-3 text-right text-zinc-300 font-medium">${formatMoney(parseFloat(asset.value))}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateCharts(sumsLatest) {
             const donutCtx = document.getElementById('allocationChart').getContext('2d');
             const lineCtx = document.getElementById('trendChart').getContext('2d');
 
-            // Data for Donut
-            const donutData = [latestData.bank, latestData.stocks, latestData.crypto];
-            
             if (donutChartInstance) donutChartInstance.destroy();
             donutChartInstance = new Chart(donutCtx, {
                 type: 'doughnut',
                 data: {
                     labels: ['Bank', 'Stocks', 'Crypto'],
                     datasets: [{
-                        data: donutData,
-                        backgroundColor: ['#a1a1aa', '#ca8a04', '#f97316'], // Zinc, Yellow, Orange (No Blue)
+                        data: [sumsLatest.bank, sumsLatest.stocks, sumsLatest.crypto],
+                        backgroundColor: ['#a1a1aa', '#ca8a04', '#f97316'],
                         borderWidth: 0,
                     }]
                 },
-                options: {
-                    responsive: true, maintainAspectRatio: false, cutout: '75%',
-                    plugins: { legend: { position: 'bottom' } }
-                }
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
             });
 
-            // Data for Line Chart
             const dates = historyData.map(d => d.date);
-            const totals = historyData.map(d => d.bank + d.stocks + d.crypto);
+            const totals = historyData.map(d => calculateSums(d).total);
 
             let gradient = lineCtx.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, 'rgba(202, 138, 4, 0.4)'); // Yellow gradient
+            gradient.addColorStop(0, 'rgba(202, 138, 4, 0.4)');
             gradient.addColorStop(1, 'rgba(202, 138, 4, 0.0)');
 
             if (lineChartInstance) lineChartInstance.destroy();
@@ -208,23 +292,14 @@
                 data: {
                     labels: dates,
                     datasets: [{
-                        label: 'Net Worth',
-                        data: totals,
-                        borderColor: '#ca8a04', // Yellow 600
-                        backgroundColor: gradient,
+                        label: 'Net Worth', data: totals,
+                        borderColor: '#ca8a04', backgroundColor: gradient,
                         borderWidth: 2, fill: true, tension: 0.3, pointRadius: 3
                     }]
                 },
                 options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { grid: { display: false } },
-                        y: { 
-                            grid: { color: '#27272a' },
-                            ticks: { callback: function(value) { return '$' + value / 1000 + 'k'; } }
-                        }
-                    }
+                    responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                    scales: { x: { grid: { display: false } }, y: { grid: { color: '#27272a' }, ticks: { callback: function(value) { return '$' + value / 1000 + 'k'; } } } }
                 }
             });
         }
@@ -234,37 +309,36 @@
             e.preventDefault();
             const date = document.getElementById('input-date').value;
             const bank = parseFloat(document.getElementById('input-bank').value) || 0;
-            const stocks = parseFloat(document.getElementById('input-stocks').value) || 0;
-            const crypto = parseFloat(document.getElementById('input-crypto').value) || 0;
+            
+            const stocks = [];
+            document.querySelectorAll('.stock-row').forEach(row => {
+                const name = row.querySelector('.asset-name').value;
+                const value = parseFloat(row.querySelector('.asset-value').value) || 0;
+                if(name) stocks.push({name, value});
+            });
 
-            // ตรวจสอบว่ามีข้อมูลของวันนี้หรือยัง ถ้ามีให้อัปเดต ถ้าไม่มีให้เพิ่มใหม่
+            const crypto = [];
+            document.querySelectorAll('.crypto-row').forEach(row => {
+                const name = row.querySelector('.asset-name').value;
+                const value = parseFloat(row.querySelector('.asset-value').value) || 0;
+                if(name) crypto.push({name, value});
+            });
+
+            const newData = { date, bank, stocks, crypto };
+            
             const existingIndex = historyData.findIndex(d => d.date === date);
-            if (existingIndex >= 0) {
-                historyData[existingIndex] = { date, bank, stocks, crypto };
-            } else {
-                historyData.push({ date, bank, stocks, crypto });
-            }
+            if (existingIndex >= 0) { historyData[existingIndex] = newData; } 
+            else { historyData.push(newData); }
 
-            // บันทึกลง Browser
-            localStorage.setItem('wealthHistory', JSON.stringify(historyData));
+            localStorage.setItem('wealthHistoryV2', JSON.stringify(historyData));
             updateDashboard();
             alert('Record saved successfully!');
         });
 
-        // --- 5. I18N (Language System) ---
+        // --- 5. Language ---
         const dictionary = {
-            en: {
-                title: "Wealth Portfolio", add_daily: "Update Daily Record",
-                date_label: "Date", bank_label: "Bank Balance", stocks_label: "Stocks Balance", crypto_label: "Crypto Balance", save_btn: "Save Record",
-                total_net: "Total Net Worth", bank: "Bank / Cash", stocks: "Stock Balance", crypto: "Crypto",
-                allocation: "Asset Allocation", trend: "Wealth Trend"
-            },
-            jp: {
-                title: "資産ポートフォリオ", add_daily: "日次記録の更新",
-                date_label: "日付", bank_label: "銀行残高", stocks_label: "株式残高", crypto_label: "暗号資産残高", save_btn: "記録を保存",
-                total_net: "純資産総額", bank: "銀行 / 現金", stocks: "株式残高", crypto: "暗号資産",
-                allocation: "資産配分", trend: "資産推移"
-            }
+            en: { title: "Wealth Portfolio", add_daily: "Update Daily Record", date_label: "Date:", bank_label: "Bank / Cash Total ($)", stocks_label: "Equities (Stocks)", crypto_label: "Digital Assets (Crypto)", save_btn: "Save Record", total_net: "Total Net Worth", bank: "Bank / Cash", stocks_sum: "Equities Total", crypto_sum: "Crypto Total", allocation: "Asset Allocation", trend: "Wealth Trend", holdings: "Current Holdings Breakdown" },
+            jp: { title: "資産ポートフォリオ", add_daily: "日次記録の更新", date_label: "日付:", bank_label: "銀行 / 現金残高 ($)", stocks_label: "株式", crypto_label: "暗号資産", save_btn: "記録を保存", total_net: "純資産総額", bank: "銀行 / 現金", stocks_sum: "株式合計", crypto_sum: "暗号資産合計", allocation: "資産配分", trend: "資産推移", holdings: "現在の保有資産内訳" }
         };
 
         function setLanguage(lang) {
@@ -274,7 +348,8 @@
             });
         }
 
-        // Initialize dashboard on load
+        // Boot
+        loadFormWithLatestData();
         updateDashboard();
     </script>
 </body>
