@@ -26,75 +26,39 @@
         ::-webkit-scrollbar-track { background: #09090b; }
         ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #ca8a04; }
+        
+        /* Modal Animation */
+        .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
+        .modal-exit { animation: fadeOut 0.2s ease-in forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.95); } }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">
 
-    <!-- Header & Language Switcher -->
+    <!-- Header & Action Buttons -->
     <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
             <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-yellow-600 to-yellow-300" data-i18n="title">Wealth Portfolio</h1>
             <p class="text-sm text-zinc-400 mt-1" id="current-date"></p>
         </div>
-        <div class="flex gap-2">
-            <button onclick="setLanguage('en')" class="px-4 py-1.5 rounded-md text-sm font-semibold glass-card hover:bg-zinc-800 transition text-zinc-300">EN</button>
-            <button onclick="setLanguage('jp')" class="px-4 py-1.5 rounded-md text-sm font-semibold glass-card hover:bg-zinc-800 transition text-zinc-300">日本語</button>
+        <div class="flex items-center gap-3">
+            <button onclick="openModal()" class="px-5 py-2 rounded-md text-sm font-bold bg-gradient-to-r from-yellow-700 to-yellow-600 hover:from-yellow-600 hover:to-yellow-500 text-zinc-950 transition shadow-lg flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                <span data-i18n="update_btn">Update Portfolio</span>
+            </button>
+            <div class="h-6 w-px bg-zinc-700 mx-1"></div>
+            <button onclick="setLanguage('en')" class="px-3 py-1.5 rounded-md text-sm font-semibold glass-card hover:bg-zinc-800 transition text-zinc-300">EN</button>
+            <button onclick="setLanguage('jp')" class="px-3 py-1.5 rounded-md text-sm font-semibold glass-card hover:bg-zinc-800 transition text-zinc-300">JP</button>
         </div>
     </header>
-
-    <!-- Daily Data Input Section -->
-    <div class="glass-card rounded-xl p-6 mb-8 border-l-4 border-l-yellow-600">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="text-lg font-semibold text-zinc-200" data-i18n="add_daily">Update Daily Record</h3>
-            <div class="flex items-center gap-3">
-                <label class="text-sm text-zinc-400" data-i18n="date_label">Date:</label>
-                <input type="date" id="input-date" required class="bg-zinc-950 border border-zinc-700 text-white p-2 rounded text-sm focus:outline-none focus:border-yellow-500">
-            </div>
-        </div>
-        
-        <form id="daily-form">
-            <!-- Bank & Cash Flow Section -->
-            <div class="mb-6 pb-6 border-b border-zinc-800">
-                <div class="flex justify-between items-end mb-2">
-                    <label class="block text-sm font-medium text-zinc-400" data-i18n="bank_label">Bank / Cash Total ($)</label>
-                    <button type="button" onclick="addTransactionRow()" class="text-xs font-semibold text-zinc-300 hover:text-white border border-zinc-600/50 px-3 py-1.5 rounded transition bg-zinc-800 hover:bg-zinc-700" data-i18n="add_cashflow">+ Add Cash Flow Note</button>
-                </div>
-                <input type="number" id="input-bank" required class="w-full md:w-1/3 bg-zinc-950 border border-zinc-700 text-white p-2.5 rounded focus:outline-none focus:border-zinc-500 mb-3" placeholder="Enter final balance">
-                
-                <!-- Transactions Container -->
-                <div id="transaction-container" class="space-y-2 mt-3">
-                    <!-- Dynamic Transaction Rows go here -->
-                </div>
-            </div>
-
-            <!-- Stocks Section -->
-            <div class="mb-6 pb-6 border-b border-zinc-800">
-                <div class="flex justify-between items-center mb-3">
-                    <label class="block text-sm font-medium text-zinc-400" data-i18n="stocks_label">Equities (Stocks)</label>
-                    <button type="button" onclick="addAssetRow('stock')" class="text-xs font-semibold text-yellow-500 hover:text-yellow-400 border border-yellow-600/30 px-2 py-1 rounded transition">+ Add Stock</button>
-                </div>
-                <div id="stock-container" class="space-y-3"></div>
-            </div>
-
-            <!-- Crypto Section -->
-            <div class="mb-8">
-                <div class="flex justify-between items-center mb-3">
-                    <label class="block text-sm font-medium text-zinc-400" data-i18n="crypto_label">Digital Assets (Crypto)</label>
-                    <button type="button" onclick="addAssetRow('crypto')" class="text-xs font-semibold text-orange-500 hover:text-orange-400 border border-orange-600/30 px-2 py-1 rounded transition">+ Add Crypto</button>
-                </div>
-                <div id="crypto-container" class="space-y-3"></div>
-            </div>
-
-            <button type="submit" class="w-full px-4 py-3 bg-gradient-to-r from-yellow-700 to-yellow-600 hover:from-yellow-600 hover:to-yellow-500 text-zinc-950 font-bold rounded transition shadow-lg text-lg tracking-wide" data-i18n="save_btn">Save Record</button>
-        </form>
-    </div>
 
     <!-- Top Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div class="glass-card rounded-xl p-6 relative overflow-hidden">
             <div class="absolute top-0 right-0 p-4 opacity-10 text-yellow-500"><svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
             <h3 class="text-zinc-400 text-sm font-medium mb-2" data-i18n="total_net">Total Net Worth</h3>
-            <div class="text-3xl font-bold mb-1 text-white" id="val-total">$0</div>
+            <div class="text-3xl font-bold mb-1 text-white transition-all duration-500" id="val-total">$0</div>
             <div id="change-total" class="text-sm font-medium mt-2">--</div>
         </div>
         <div class="glass-card rounded-xl p-6 border-t-2 border-zinc-400">
@@ -116,26 +80,18 @@
 
     <!-- Charts Section -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <!-- Allocation Donut Chart -->
         <div class="glass-card rounded-xl p-6 lg:col-span-1 flex flex-col justify-center">
             <h3 class="text-lg font-semibold mb-4 text-zinc-200" data-i18n="allocation">Asset Allocation</h3>
-            <div class="relative h-64 w-full">
-                <canvas id="allocationChart"></canvas>
-            </div>
+            <div class="relative h-64 w-full"><canvas id="allocationChart"></canvas></div>
         </div>
-        
-        <!-- Net Worth Trend Line Chart -->
         <div class="glass-card rounded-xl p-6 lg:col-span-2">
             <h3 class="text-lg font-semibold mb-4 text-zinc-200" data-i18n="trend">Wealth Trend</h3>
-            <div class="relative h-64 w-full">
-                <canvas id="trendChart"></canvas>
-            </div>
+            <div class="relative h-64 w-full"><canvas id="trendChart"></canvas></div>
         </div>
     </div>
 
     <!-- Details Section (Holdings & Cash Flow) -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
-        <!-- Detailed Holdings Table -->
         <div class="glass-card rounded-xl p-6 overflow-x-auto lg:col-span-2">
             <h3 class="text-lg font-semibold mb-4 text-zinc-200" data-i18n="holdings">Current Holdings Breakdown</h3>
             <table class="w-full text-left border-collapse">
@@ -146,19 +102,73 @@
                         <th class="pb-3 font-medium text-right">Value ($)</th>
                     </tr>
                 </thead>
-                <tbody id="holdings-table-body" class="text-sm">
-                    <!-- Data will be injected here -->
-                </tbody>
+                <tbody id="holdings-table-body" class="text-sm"></tbody>
             </table>
         </div>
-
-        <!-- Recent Cash Flow Log -->
         <div class="glass-card rounded-xl p-6">
             <h3 class="text-lg font-semibold mb-4 text-zinc-200" data-i18n="cashflow_log">Recent Cash Flow Log</h3>
-            <ul id="cashflow-list" class="space-y-3">
-                <!-- Data will be injected here -->
-            </ul>
+            <ul id="cashflow-list" class="space-y-3"></ul>
         </div>
+    </div>
+
+    <!-- ================= MODAL FOR DATA ENTRY ================= -->
+    <div id="update-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-center items-center p-4">
+        <div class="glass-card w-full max-w-2xl max-h-[90vh] rounded-xl flex flex-col shadow-2xl border border-zinc-700">
+            <!-- Modal Header -->
+            <div class="p-5 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50 rounded-t-xl">
+                <h3 class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-yellow-200" data-i18n="add_daily">Update Daily Record</h3>
+                <button onclick="closeModal()" class="text-zinc-400 hover:text-white transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-6 overflow-y-auto custom-scrollbar">
+                <form id="daily-form">
+                    <div class="flex items-center gap-3 mb-6 bg-zinc-950/50 p-3 rounded-lg border border-zinc-800">
+                        <label class="text-sm font-semibold text-zinc-300 w-24" data-i18n="date_label">Select Date:</label>
+                        <input type="date" id="input-date" required class="flex-1 bg-transparent text-white p-1 focus:outline-none cursor-pointer">
+                    </div>
+                    
+                    <div class="mb-6 pb-6 border-b border-zinc-800">
+                        <div class="flex justify-between items-end mb-3">
+                            <label class="block text-sm font-medium text-zinc-400" data-i18n="bank_label">Bank / Cash Total ($)</label>
+                            <button type="button" onclick="addTransactionRow()" class="text-xs font-semibold text-zinc-300 hover:text-white border border-zinc-600/50 px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 transition" data-i18n="add_cashflow">+ Add Cash Flow Note</button>
+                        </div>
+                        <input type="number" id="input-bank" required class="w-full bg-zinc-950 border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-600 transition" placeholder="Enter final balance">
+                        <div id="transaction-container" class="space-y-2 mt-3"></div>
+                    </div>
+
+                    <div class="mb-6 pb-6 border-b border-zinc-800">
+                        <div class="flex justify-between items-center mb-3">
+                            <label class="block text-sm font-medium text-zinc-400" data-i18n="stocks_label">Equities (Stocks)</label>
+                            <button type="button" onclick="addAssetRow('stock')" class="text-xs font-semibold text-yellow-500 hover:text-yellow-400 border border-yellow-600/30 px-2 py-1 rounded transition">+ Add Stock</button>
+                        </div>
+                        <div id="stock-container" class="space-y-3"></div>
+                    </div>
+
+                    <div class="mb-2">
+                        <div class="flex justify-between items-center mb-3">
+                            <label class="block text-sm font-medium text-zinc-400" data-i18n="crypto_label">Digital Assets (Crypto)</label>
+                            <button type="button" onclick="addAssetRow('crypto')" class="text-xs font-semibold text-orange-500 hover:text-orange-400 border border-orange-600/30 px-2 py-1 rounded transition">+ Add Crypto</button>
+                        </div>
+                        <div id="crypto-container" class="space-y-3"></div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-5 border-t border-zinc-800 bg-zinc-900/80 rounded-b-xl flex gap-3 justify-end">
+                <button onclick="closeModal()" class="px-5 py-2.5 rounded text-sm font-semibold text-zinc-400 hover:text-white transition" data-i18n="cancel_btn">Cancel</button>
+                <button type="submit" form="daily-form" class="px-6 py-2.5 bg-gradient-to-r from-yellow-700 to-yellow-600 hover:from-yellow-600 hover:to-yellow-500 text-zinc-950 font-bold rounded shadow-lg transition" data-i18n="save_btn">Save Record</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Smart Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 transform translate-y-[150%] opacity-0 transition-all duration-500 z-50 flex items-center gap-3 glass-card border-l-4 border-l-yellow-500 text-white px-5 py-4 rounded shadow-2xl">
+        <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span id="toast-msg" class="font-medium text-sm">Record saved successfully!</span>
     </div>
 
     <script>
@@ -166,38 +176,52 @@
         document.getElementById('input-date').valueAsDate = new Date();
         document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-        // Load data V3 format (Included cashFlow array)
-        let historyData = JSON.parse(localStorage.getItem('wealthHistoryV3')) || [
+        let historyData = JSON.parse(localStorage.getItem('wealthHistoryV4')) || [
             { 
-                date: '2026-04-20', 
+                date: '2026-05-01', 
                 bank: 120000, 
-                cashFlow: [
-                    {desc: 'Salary & Commission', type: 'income', amount: 4500},
-                    {desc: 'Hua Hin Resort', type: 'expense', amount: 350},
-                    {desc: 'Sushi Express & Starbucks', type: 'expense', amount: 85}
-                ],
+                cashFlow: [{desc: 'Salary', type: 'income', amount: 5000}],
                 stocks: [{name: 'MSFT', value: 250000}, {name: 'LLY', value: 180000}, {name: 'ABBV', value: 90000}, {name: 'ASTS', value: 35000}], 
                 crypto: [{name: 'BTC', value: 85000}, {name: 'ETH', value: 20000}] 
             }
         ];
 
-        let donutChartInstance = null;
-        let lineChartInstance = null;
-        Chart.defaults.color = '#a1a1aa'; 
-        Chart.defaults.font.family = 'Montserrat';
+        let donutChartInstance = null; let lineChartInstance = null;
+        Chart.defaults.color = '#a1a1aa'; Chart.defaults.font.family = 'Montserrat';
 
-        // --- 2. Dynamic Input Generation ---
+        // --- 2. Modal & Toast Logic (The Smooth Experience) ---
+        const modal = document.getElementById('update-modal');
+        const modalContent = modal.querySelector('.glass-card');
+        const toast = document.getElementById('toast');
+
+        function openModal() {
+            loadFormWithLatestData();
+            modal.classList.remove('hidden');
+            modalContent.classList.remove('modal-exit');
+            modalContent.classList.add('modal-enter');
+        }
+
+        function closeModal() {
+            modalContent.classList.remove('modal-enter');
+            modalContent.classList.add('modal-exit');
+            setTimeout(() => { modal.classList.add('hidden'); }, 200);
+        }
+
+        function showToast(message) {
+            document.getElementById('toast-msg').innerText = message;
+            toast.classList.remove('translate-y-[150%]', 'opacity-0');
+            setTimeout(() => { toast.classList.add('translate-y-[150%]', 'opacity-0'); }, 3000);
+        }
+
+        // --- 3. Dynamic Inputs ---
         function addAssetRow(type, name = '', value = '') {
             const container = document.getElementById(`${type}-container`);
             const row = document.createElement('div');
             row.className = `flex gap-2 items-center ${type}-row`;
-            
             row.innerHTML = `
-                <input type="text" placeholder="Name (e.g. AAPL)" value="${name}" required class="asset-name w-1/2 bg-zinc-950 border border-zinc-800 text-white p-2 rounded text-sm focus:outline-none focus:border-zinc-500">
-                <input type="number" placeholder="Amount" value="${value || ''}" required class="asset-value w-1/2 bg-zinc-950 border border-zinc-800 text-white p-2 rounded text-sm focus:outline-none focus:border-zinc-500">
-                <button type="button" onclick="this.parentElement.remove()" class="text-zinc-600 hover:text-red-500 px-2 py-2 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+                <input type="text" placeholder="Name (e.g. AAPL)" value="${name}" required class="asset-name w-1/2 bg-zinc-950 border border-zinc-800 text-white p-2.5 rounded-lg text-sm focus:outline-none focus:border-zinc-500">
+                <input type="number" placeholder="Amount" value="${value || ''}" required class="asset-value w-1/2 bg-zinc-950 border border-zinc-800 text-white p-2.5 rounded-lg text-sm focus:outline-none focus:border-zinc-500">
+                <button type="button" onclick="this.parentElement.remove()" class="text-zinc-600 hover:text-red-500 px-2 py-2 transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             `;
             container.appendChild(row);
         }
@@ -205,18 +229,15 @@
         function addTransactionRow(desc = '', type = 'expense', amount = '') {
             const container = document.getElementById('transaction-container');
             const row = document.createElement('div');
-            row.className = 'flex gap-2 items-center transaction-row bg-zinc-900/40 p-2 rounded border border-zinc-800/60';
-            
+            row.className = 'flex gap-2 items-center transaction-row bg-zinc-900/60 p-2 rounded-lg border border-zinc-800/80';
             row.innerHTML = `
-                <input type="text" placeholder="Note (e.g. Salary, Coffee)" value="${desc}" class="tx-desc w-[45%] bg-zinc-950 border border-zinc-800 text-white p-2 rounded text-sm focus:outline-none focus:border-zinc-500">
+                <input type="text" placeholder="Note" value="${desc}" class="tx-desc w-[45%] bg-zinc-950 border border-zinc-800 text-white p-2 rounded text-sm focus:outline-none focus:border-zinc-500">
                 <select class="tx-type w-[25%] bg-zinc-950 border border-zinc-800 text-white p-2 rounded text-sm focus:outline-none focus:border-zinc-500">
-                    <option value="income" ${type === 'income' ? 'selected' : ''}>+ Income</option>
-                    <option value="expense" ${type === 'expense' ? 'selected' : ''}>- Expense</option>
+                    <option value="income" ${type === 'income' ? 'selected' : ''}>+ In</option>
+                    <option value="expense" ${type === 'expense' ? 'selected' : ''}>- Out</option>
                 </select>
                 <input type="number" placeholder="Amt" value="${amount}" class="tx-amount w-[25%] bg-zinc-950 border border-zinc-800 text-white p-2 rounded text-sm focus:outline-none focus:border-zinc-500">
-                <button type="button" onclick="this.parentElement.remove()" class="text-zinc-600 hover:text-red-500 px-1 transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+                <button type="button" onclick="this.parentElement.remove()" class="text-zinc-600 hover:text-red-500 px-1 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             `;
             container.appendChild(row);
         }
@@ -234,13 +255,11 @@
             latest.crypto.forEach(c => addAssetRow('crypto', c.name, c.value));
             if(latest.crypto.length === 0) addAssetRow('crypto');
 
-            // Clear transactions container on load so it's fresh for the new day
             document.getElementById('transaction-container').innerHTML = '';
         }
 
-        // --- 3. UI and Charts Calculation ---
+        // --- 4. Dashboard Core Functions ---
         function formatMoney(num) { return '$' + num.toLocaleString('en-US'); }
-
         function calculateSums(record) {
             const bankSum = parseFloat(record.bank) || 0;
             const stockSum = record.stocks.reduce((acc, curr) => acc + (parseFloat(curr.value) || 0), 0);
@@ -253,14 +272,11 @@
             historyData.sort((a, b) => new Date(a.date) - new Date(b.date));
             const latest = historyData[historyData.length - 1];
             const previous = historyData.length > 1 ? historyData[historyData.length - 2] : latest;
-
             const sumsLatest = calculateSums(latest);
             const sumsPrev = calculateSums(previous);
-            
             const diff = sumsLatest.total - sumsPrev.total;
             const diffPct = sumsPrev.total > 0 ? (diff / sumsPrev.total) * 100 : 0;
 
-            // Cards
             document.getElementById('val-total').innerText = formatMoney(sumsLatest.total);
             document.getElementById('val-bank').innerText = formatMoney(sumsLatest.bank);
             document.getElementById('val-stocks').innerText = formatMoney(sumsLatest.stocks);
@@ -273,78 +289,41 @@
             }
 
             const changeEl = document.getElementById('change-total');
-            if (diff > 0) {
-                changeEl.innerHTML = `<span class="text-emerald-500">▲ +${formatMoney(diff)} (+${diffPct.toFixed(2)}%)</span>`;
-            } else if (diff < 0) {
-                changeEl.innerHTML = `<span class="text-red-500">▼ ${formatMoney(diff)} (${diffPct.toFixed(2)}%)</span>`;
-            } else {
-                changeEl.innerHTML = `<span class="text-zinc-500">No change</span>`;
-            }
+            if (diff > 0) changeEl.innerHTML = `<span class="text-emerald-500">▲ +${formatMoney(diff)} (+${diffPct.toFixed(2)}%)</span>`;
+            else if (diff < 0) changeEl.innerHTML = `<span class="text-red-500">▼ ${formatMoney(diff)} (${diffPct.toFixed(2)}%)</span>`;
+            else changeEl.innerHTML = `<span class="text-zinc-500">No change</span>`;
 
-            updateCharts(sumsLatest);
-            updateHoldingsTable(latest);
-            updateCashFlowLog();
+            updateCharts(sumsLatest); updateHoldingsTable(latest); updateCashFlowLog();
         }
 
         function updateHoldingsTable(latestData) {
             const tbody = document.getElementById('holdings-table-body');
             tbody.innerHTML = '';
-            
             let allAssets = [];
             latestData.stocks.forEach(s => allAssets.push({...s, type: 'Stock', color: 'text-yellow-500'}));
             latestData.crypto.forEach(c => allAssets.push({...c, type: 'Crypto', color: 'text-orange-500'}));
             allAssets.sort((a, b) => b.value - a.value);
-
             allAssets.forEach(asset => {
-                const tr = document.createElement('tr');
-                tr.className = 'border-b border-zinc-800/50 hover:bg-zinc-800/30 transition';
-                tr.innerHTML = `
+                tbody.innerHTML += `<tr class="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition">
                     <td class="py-3 font-semibold text-zinc-200">${asset.name}</td>
                     <td class="py-3 ${asset.color} font-medium text-xs tracking-wider uppercase">${asset.type}</td>
-                    <td class="py-3 text-right text-zinc-300 font-medium">${formatMoney(parseFloat(asset.value))}</td>
-                `;
-                tbody.appendChild(tr);
+                    <td class="py-3 text-right text-zinc-300 font-medium">${formatMoney(parseFloat(asset.value))}</td></tr>`;
             });
         }
 
         function updateCashFlowLog() {
             const ul = document.getElementById('cashflow-list');
-            ul.innerHTML = '';
-            
-            // Gather all cashflow from all dates, sort by newest first
             let allFlows = [];
-            historyData.forEach(record => {
-                if(record.cashFlow) {
-                    record.cashFlow.forEach(flow => {
-                        allFlows.push({ ...flow, date: record.date });
-                    });
-                }
-            });
+            historyData.forEach(record => { if(record.cashFlow) record.cashFlow.forEach(flow => allFlows.push({ ...flow, date: record.date })); });
             allFlows.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-            // Take top 8 recent transactions
             const recentFlows = allFlows.slice(0, 8);
-
-            if(recentFlows.length === 0) {
-                ul.innerHTML = '<li class="text-zinc-500 text-sm italic">No recent transactions.</li>';
-                return;
-            }
-
+            if(recentFlows.length === 0) { ul.innerHTML = '<li class="text-zinc-500 text-sm italic">No recent transactions.</li>'; return; }
+            ul.innerHTML = '';
             recentFlows.forEach(flow => {
                 const isIncome = flow.type === 'income';
-                const sign = isIncome ? '+' : '-';
-                const colorClass = isIncome ? 'text-emerald-400' : 'text-red-400';
-                
-                const li = document.createElement('li');
-                li.className = 'flex justify-between items-center py-2 border-b border-zinc-800/50 last:border-0';
-                li.innerHTML = `
-                    <div>
-                        <p class="text-sm text-zinc-200 font-medium">${flow.desc}</p>
-                        <p class="text-xs text-zinc-500">${flow.date}</p>
-                    </div>
-                    <div class="text-sm font-bold ${colorClass}">${sign}${formatMoney(parseFloat(flow.amount))}</div>
-                `;
-                ul.appendChild(li);
+                ul.innerHTML += `<li class="flex justify-between items-center py-2 border-b border-zinc-800/50 last:border-0">
+                    <div><p class="text-sm text-zinc-200 font-medium">${flow.desc}</p><p class="text-xs text-zinc-500">${flow.date}</p></div>
+                    <div class="text-sm font-bold ${isIncome ? 'text-emerald-400' : 'text-red-400'}">${isIncome ? '+' : '-'}${formatMoney(parseFloat(flow.amount))}</div></li>`;
             });
         }
 
@@ -355,91 +334,51 @@
             if (donutChartInstance) donutChartInstance.destroy();
             donutChartInstance = new Chart(donutCtx, {
                 type: 'doughnut',
-                data: {
-                    labels: ['Bank', 'Stocks', 'Crypto'],
-                    datasets: [{
-                        data: [sumsLatest.bank, sumsLatest.stocks, sumsLatest.crypto],
-                        backgroundColor: ['#a1a1aa', '#ca8a04', '#f97316'],
-                        borderWidth: 0,
-                    }]
-                },
+                data: { labels: ['Bank', 'Stocks', 'Crypto'], datasets: [{ data: [sumsLatest.bank, sumsLatest.stocks, sumsLatest.crypto], backgroundColor: ['#a1a1aa', '#ca8a04', '#f97316'], borderWidth: 0 }] },
                 options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
             });
 
             const dates = historyData.map(d => d.date);
             const totals = historyData.map(d => calculateSums(d).total);
-
             let gradient = lineCtx.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, 'rgba(202, 138, 4, 0.4)');
-            gradient.addColorStop(1, 'rgba(202, 138, 4, 0.0)');
+            gradient.addColorStop(0, 'rgba(202, 138, 4, 0.4)'); gradient.addColorStop(1, 'rgba(202, 138, 4, 0.0)');
 
             if (lineChartInstance) lineChartInstance.destroy();
             lineChartInstance = new Chart(lineCtx, {
                 type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [{
-                        label: 'Net Worth', data: totals,
-                        borderColor: '#ca8a04', backgroundColor: gradient,
-                        borderWidth: 2, fill: true, tension: 0.3, pointRadius: 3
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
-                    scales: { x: { grid: { display: false } }, y: { grid: { color: '#27272a' }, ticks: { callback: function(value) { return '$' + value / 1000 + 'k'; } } } }
-                }
+                data: { labels: dates, datasets: [{ label: 'Net Worth', data: totals, borderColor: '#ca8a04', backgroundColor: gradient, borderWidth: 2, fill: true, tension: 0.3, pointRadius: 3 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#27272a' }, ticks: { callback: function(value) { return '$' + value / 1000 + 'k'; } } } } }
             });
         }
 
-        // --- 4. Handle Form Submission ---
+        // --- 5. Form Submit & Save ---
         document.getElementById('daily-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const date = document.getElementById('input-date').value;
             const bank = parseFloat(document.getElementById('input-bank').value) || 0;
             
-            const cashFlow = [];
-            document.querySelectorAll('.transaction-row').forEach(row => {
-                const desc = row.querySelector('.tx-desc').value;
-                const type = row.querySelector('.tx-type').value;
-                const amount = parseFloat(row.querySelector('.tx-amount').value) || 0;
-                if(desc && amount) cashFlow.push({desc, type, amount});
-            });
-
-            const stocks = [];
-            document.querySelectorAll('.stock-row').forEach(row => {
-                const name = row.querySelector('.asset-name').value;
-                const value = parseFloat(row.querySelector('.asset-value').value) || 0;
-                if(name) stocks.push({name, value});
-            });
-
-            const crypto = [];
-            document.querySelectorAll('.crypto-row').forEach(row => {
-                const name = row.querySelector('.asset-name').value;
-                const value = parseFloat(row.querySelector('.asset-value').value) || 0;
-                if(name) crypto.push({name, value});
-            });
+            const cashFlow = []; document.querySelectorAll('.transaction-row').forEach(row => { const desc = row.querySelector('.tx-desc').value; const type = row.querySelector('.tx-type').value; const amount = parseFloat(row.querySelector('.tx-amount').value) || 0; if(desc && amount) cashFlow.push({desc, type, amount}); });
+            const stocks = []; document.querySelectorAll('.stock-row').forEach(row => { const name = row.querySelector('.asset-name').value; const value = parseFloat(row.querySelector('.asset-value').value) || 0; if(name) stocks.push({name, value}); });
+            const crypto = []; document.querySelectorAll('.crypto-row').forEach(row => { const name = row.querySelector('.asset-name').value; const value = parseFloat(row.querySelector('.asset-value').value) || 0; if(name) crypto.push({name, value}); });
 
             const newData = { date, bank, cashFlow, stocks, crypto };
-            
             const existingIndex = historyData.findIndex(d => d.date === date);
-            if (existingIndex >= 0) { historyData[existingIndex] = newData; } 
-            else { historyData.push(newData); }
+            if (existingIndex >= 0) historyData[existingIndex] = newData; else historyData.push(newData);
 
-            localStorage.setItem('wealthHistoryV3', JSON.stringify(historyData));
+            localStorage.setItem('wealthHistoryV4', JSON.stringify(historyData));
             updateDashboard();
-            
-            // Clear transactions input after save
-            document.getElementById('transaction-container').innerHTML = '';
-            alert('Record saved successfully!');
+            closeModal();
+            showToast(dictionary[document.documentElement.lang || 'en'].success_toast || "Data updated successfully!");
         });
 
-        // --- 5. Language ---
+        // --- 6. Language ---
         const dictionary = {
-            en: { title: "Wealth Portfolio", add_daily: "Update Daily Record", date_label: "Date:", bank_label: "Bank / Cash Total ($)", add_cashflow: "+ Add Cash Flow Note", stocks_label: "Equities (Stocks)", crypto_label: "Digital Assets (Crypto)", save_btn: "Save Record", total_net: "Total Net Worth", bank: "Bank / Cash", stocks_sum: "Equities Total", crypto_sum: "Crypto Total", allocation: "Asset Allocation", trend: "Wealth Trend", holdings: "Current Holdings Breakdown", cashflow_log: "Recent Cash Flow Log" },
-            jp: { title: "資産ポートフォリオ", add_daily: "日次記録の更新", date_label: "日付:", bank_label: "銀行 / 現金残高 ($)", add_cashflow: "+ キャッシュフロー追加", stocks_label: "株式", crypto_label: "暗号資産", save_btn: "記録を保存", total_net: "純資産総額", bank: "銀行 / 現金", stocks_sum: "株式合計", crypto_sum: "暗号資産合計", allocation: "資産配分", trend: "資産推移", holdings: "現在の保有資産内訳", cashflow_log: "最近のキャッシュフロー" }
+            en: { title: "Wealth Portfolio", update_btn: "Update Portfolio", add_daily: "Update Daily Record", date_label: "Select Date:", bank_label: "Bank / Cash Total ($)", add_cashflow: "+ Cash Flow Note", stocks_label: "Equities (Stocks)", crypto_label: "Digital Assets (Crypto)", cancel_btn: "Cancel", save_btn: "Save Record", total_net: "Total Net Worth", bank: "Bank / Cash", stocks_sum: "Equities Total", crypto_sum: "Crypto Total", allocation: "Asset Allocation", trend: "Wealth Trend", holdings: "Current Holdings Breakdown", cashflow_log: "Recent Cash Flow Log", success_toast: "Data updated successfully!" },
+            jp: { title: "資産ポートフォリオ", update_btn: "データ更新", add_daily: "日次記録の更新", date_label: "日付選択:", bank_label: "銀行 / 現金残高 ($)", add_cashflow: "+ キャッシュフロー", stocks_label: "株式", crypto_label: "暗号資産", cancel_btn: "キャンセル", save_btn: "記録を保存", total_net: "純資産総額", bank: "銀行 / 現金", stocks_sum: "株式合計", crypto_sum: "暗号資産合計", allocation: "資産配分", trend: "資産推移", holdings: "現在の保有資産内訳", cashflow_log: "最近のキャッシュフロー", success_toast: "データの更新が完了しました！" }
         };
 
         function setLanguage(lang) {
+            document.documentElement.lang = lang;
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
                 if (dictionary[lang][key]) el.innerText = dictionary[lang][key];
@@ -447,7 +386,6 @@
         }
 
         // Boot
-        loadFormWithLatestData();
         updateDashboard();
     </script>
 </body>
