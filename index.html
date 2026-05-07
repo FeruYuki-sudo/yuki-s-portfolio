@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fintech Wealth Dashboard</title>
+    <title>Ultimate Fintech Dashboard</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
@@ -14,10 +14,10 @@
         body { font-family: 'Montserrat', sans-serif; background-color: #000000; color: #f4f4f5; }
         /* Modern Glass UI */
         .glass-card { 
-            background: rgba(24, 24, 27, 0.6); 
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.05); 
+            background: rgba(24, 24, 27, 0.65); 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08); 
             box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
         }
         .gradient-text { background: linear-gradient(to right, #fbbf24, #fef08a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -26,51 +26,58 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
         
-        /* Modal Animation */
-        .modal-enter { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .modal-exit { animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        @keyframes slideDown { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(20px) scale(0.98); } }
+        .modal-enter { animation: slideUp 0.3s ease-out forwards; }
+        .modal-exit { animation: slideDown 0.2s ease-in forwards; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes slideDown { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(20px) scale(0.95); } }
         
         .live-dot { animation: pulse 2s infinite; }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
 
         /* Profit / Loss Colors */
-        .text-profit { color: #10b981; } /* Emerald 500 */
+        .text-profit { color: #34d399; } /* Emerald 400 */
         .bg-profit { background-color: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); }
-        .text-loss { color: #f43f5e; } /* Rose 500 */
+        .text-loss { color: #fb7185; } /* Rose 400 */
         .bg-loss { background-color: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-6 lg:p-8 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-zinc-900 via-black to-black">
 
     <!-- ================= HEADER & NAV ================= -->
-    <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-5">
+    <header class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-5">
         <div>
-            <div class="flex items-center gap-3 mb-1">
+            <div class="flex items-center gap-3 mb-2">
                 <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight gradient-text" data-i18n="title">Wealth Portfolio</h1>
                 <span class="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-900 border border-zinc-800 rounded-full text-[10px] font-bold text-emerald-500 uppercase tracking-wider shadow-lg">
-                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full live-dot"></span>Live Market
+                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full live-dot"></span><span data-i18n="live_market">Live Market</span>
                 </span>
             </div>
-            <p class="text-sm text-zinc-500 font-medium" id="current-date"></p>
+            <!-- DATE DISPLAY (Fixed & Prominent) -->
+            <div class="flex items-center gap-2 text-zinc-400 bg-zinc-900/50 w-fit px-3 py-1.5 rounded-lg border border-zinc-800">
+                <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span class="text-sm font-semibold tracking-wide" id="current-date">Loading date...</span>
+            </div>
         </div>
         
         <div class="flex items-center gap-2 flex-wrap">
-            <!-- Toggles (Currency & Lang) -->
+            <!-- Currency Toggle -->
             <div class="glass-card p-1 rounded-lg flex items-center shadow-lg">
-                <button onclick="setCurrency('USD')" id="btn-usd" class="px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-yellow-500 transition">USD</button>
+                <button onclick="setCurrency('USD')" id="btn-usd" class="px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-yellow-500 transition shadow">USD</button>
                 <button onclick="setCurrency('JPY')" id="btn-jpy" class="px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition">JPY</button>
-                <div class="w-px h-4 bg-zinc-700 mx-1"></div>
-                <button onclick="setLanguage('en')" id="btn-en" class="px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white transition">EN</button>
+            </div>
+            
+            <!-- Language Toggle (Added TH) -->
+            <div class="glass-card p-1 rounded-lg flex items-center shadow-lg">
+                <button onclick="setLanguage('th')" id="btn-th" class="px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white transition shadow">TH</button>
+                <button onclick="setLanguage('en')" id="btn-en" class="px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition">EN</button>
                 <button onclick="setLanguage('jp')" id="btn-jp" class="px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition">JP</button>
             </div>
             
             <!-- Actions -->
-            <button onclick="refreshLivePrices()" class="glass-card px-4 py-2 rounded-lg text-sm font-semibold hover:bg-zinc-800 transition text-zinc-300 flex items-center gap-2">
+            <button onclick="refreshLivePrices()" class="glass-card px-4 py-2 rounded-lg text-sm font-semibold hover:bg-zinc-800 transition text-zinc-300 flex items-center gap-2 shadow-lg">
                 <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
             </button>
-            <button onclick="openModal()" class="px-5 py-2 rounded-lg text-sm font-bold bg-white text-black hover:bg-zinc-200 transition shadow-[0_0_20px_rgba(255,255,255,0.2)] flex items-center gap-2">
+            <button onclick="openModal()" class="px-5 py-2.5 rounded-lg text-sm font-bold bg-gradient-to-r from-yellow-500 to-yellow-400 text-black hover:from-yellow-400 hover:to-yellow-300 transition shadow-[0_0_20px_rgba(234,179,8,0.2)] flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 <span data-i18n="update_btn">Manage Assets</span>
             </button>
@@ -85,15 +92,21 @@
             <div class="absolute -right-10 -top-10 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none"></div>
             <div>
                 <h3 class="text-zinc-400 text-sm font-medium tracking-wide uppercase mb-2" data-i18n="total_net">Total Net Worth</h3>
-                <div class="text-4xl md:text-5xl font-bold mb-3 text-white tracking-tight" id="val-total">$0.00</div>
+                <div class="text-4xl md:text-5xl font-extrabold mb-3 text-white tracking-tight" id="val-total">$0.00</div>
                 
-                <!-- Total Return Badge -->
-                <div class="flex items-center gap-3 mt-4">
-                    <span class="text-sm text-zinc-500" data-i18n="total_return">Total Return</span>
-                    <div id="total-return-badge" class="px-3 py-1.5 rounded-lg text-sm font-bold bg-profit text-profit flex items-center gap-1">
-                        <span id="val-return-amt">+$0.00</span> 
-                        <span class="opacity-50">|</span> 
-                        <span id="val-return-pct">+0.00%</span>
+                <!-- Dime-style Total Return -->
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3 mt-5 p-3 bg-black/40 rounded-xl border border-zinc-800/50 w-fit">
+                    <div class="flex flex-col">
+                        <span class="text-xs text-zinc-500 font-medium uppercase" data-i18n="invested">Total Invested (Cost)</span>
+                        <span class="text-sm font-bold text-zinc-300" id="val-cost">$0.00</span>
+                    </div>
+                    <div class="hidden sm:block w-px h-8 bg-zinc-700"></div>
+                    <div class="flex flex-col">
+                        <span class="text-xs text-zinc-500 font-medium uppercase" data-i18n="unrealized">Total P/L</span>
+                        <div class="flex items-center gap-2">
+                            <span id="val-return-amt" class="text-sm font-bold">+$0.00</span>
+                            <span id="val-return-pct" class="text-xs font-bold px-1.5 py-0.5 rounded">+0.00%</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -102,12 +115,12 @@
 
         <!-- Breakdown Cards -->
         <div class="grid grid-rows-2 gap-6 lg:col-span-1">
-            <div class="glass-card rounded-2xl p-6 flex flex-col justify-center">
+            <div class="glass-card rounded-2xl p-6 flex flex-col justify-center border-l-4 border-l-yellow-500">
                 <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1" data-i18n="stocks_val">Equities Value</h3>
                 <div class="text-2xl font-bold text-white mb-2" id="val-stocks">$0</div>
                 <div id="stock-return-badge" class="inline-flex px-2 py-1 rounded text-xs font-bold w-fit">--</div>
             </div>
-            <div class="glass-card rounded-2xl p-6 flex flex-col justify-center">
+            <div class="glass-card rounded-2xl p-6 flex flex-col justify-center border-l-4 border-l-orange-500">
                 <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1" data-i18n="crypto_val">Crypto Value</h3>
                 <div class="text-2xl font-bold text-white mb-2" id="val-crypto">$0</div>
                 <div id="crypto-return-badge" class="inline-flex px-2 py-1 rounded text-xs font-bold w-fit">--</div>
@@ -125,17 +138,17 @@
     <div class="glass-card rounded-2xl p-6 md:p-8 overflow-x-auto mb-12">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-xl font-bold text-white tracking-wide" data-i18n="realtime_holdings">My Portfolio</h3>
-            <span id="forex-rate" class="text-xs text-zinc-400 font-medium bg-zinc-900/80 px-3 py-1.5 rounded-lg border border-zinc-800"></span>
+            <span id="forex-rate" class="text-xs text-zinc-400 font-medium bg-zinc-900/80 px-3 py-1.5 rounded-lg border border-zinc-800 shadow-inner"></span>
         </div>
         <table class="w-full text-left border-collapse whitespace-nowrap">
             <thead>
-                <tr class="text-zinc-500 text-xs uppercase tracking-widest border-b border-zinc-800/50">
-                    <th class="pb-4 font-semibold pl-2" data-i18n="asset">Asset</th>
-                    <th class="pb-4 font-semibold text-right" data-i18n="avg_cost">Avg Cost</th>
-                    <th class="pb-4 font-semibold text-right" data-i18n="price">Live Price</th>
-                    <th class="pb-4 font-semibold text-right" data-i18n="units">Units</th>
-                    <th class="pb-4 font-semibold text-right" data-i18n="current_val">Market Value</th>
-                    <th class="pb-4 font-semibold text-right pr-2" data-i18n="unrealized_pl">Unrealized P/L</th>
+                <tr class="text-zinc-500 text-xs uppercase tracking-widest border-b border-zinc-800/50 bg-black/20">
+                    <th class="py-3 pl-4 font-semibold rounded-tl-lg" data-i18n="asset">Asset</th>
+                    <th class="py-3 font-semibold text-right" data-i18n="avg_cost">Avg Cost</th>
+                    <th class="py-3 font-semibold text-right" data-i18n="price">Live Price</th>
+                    <th class="py-3 font-semibold text-right" data-i18n="units">Units</th>
+                    <th class="py-3 font-semibold text-right" data-i18n="current_val">Market Value</th>
+                    <th class="py-3 font-semibold text-right pr-4 rounded-tr-lg" data-i18n="unrealized_pl">Unrealized P/L</th>
                 </tr>
             </thead>
             <tbody id="holdings-table-body" class="text-sm">
@@ -146,49 +159,61 @@
 
     <!-- ================= MODAL FOR DATA ENTRY ================= -->
     <div id="update-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex justify-center items-center p-4">
-        <div class="glass-card w-full max-w-2xl max-h-[90vh] rounded-2xl flex flex-col shadow-2xl border border-zinc-700/50">
-            <div class="p-6 border-b border-zinc-800/50 flex justify-between items-center">
-                <h3 class="text-xl font-bold text-white" data-i18n="modal_title">Manage Portfolio Assets</h3>
+        <div class="glass-card w-full max-w-3xl max-h-[90vh] rounded-2xl flex flex-col shadow-2xl border border-zinc-700/50">
+            <div class="p-6 border-b border-zinc-800/50 flex justify-between items-center bg-black/40 rounded-t-2xl">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    <span data-i18n="modal_title">Manage Portfolio Assets</span>
+                </h3>
                 <button onclick="closeModal()" class="text-zinc-500 hover:text-white bg-zinc-900 hover:bg-zinc-800 rounded-full p-2 transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             
             <div class="p-6 overflow-y-auto custom-scrollbar">
                 <form id="daily-form">
                     <!-- Bank Input -->
-                    <div class="mb-8 p-5 bg-zinc-900/50 rounded-xl border border-zinc-800/50">
-                        <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3" data-i18n="bank_base">Cash Balance (USD)</label>
-                        <input type="number" step="any" id="input-bank" required class="w-full bg-black border border-zinc-700 text-white p-3.5 rounded-lg focus:outline-none focus:border-emerald-500 transition text-lg font-medium shadow-inner" placeholder="0.00">
+                    <div class="mb-8 p-5 bg-zinc-900/50 rounded-xl border border-zinc-800/50 shadow-inner">
+                        <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3" data-i18n="bank_base">Cash Balance (Base USD)</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-3.5 text-zinc-500 font-bold">$</span>
+                            <input type="number" step="any" id="input-bank" required class="w-full bg-black border border-zinc-700 text-white p-3.5 pl-8 rounded-lg focus:outline-none focus:border-yellow-500 transition text-lg font-medium" placeholder="0.00">
+                        </div>
                     </div>
 
                     <!-- Stocks Input -->
-                    <div class="mb-8">
+                    <div class="mb-8 border border-zinc-800/50 p-4 rounded-xl bg-black/20">
                         <div class="flex justify-between items-center mb-4">
-                            <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider" data-i18n="stock_units">Equities</label>
-                            <button type="button" onclick="addAssetRow('stock')" class="text-xs font-bold bg-white text-black px-3 py-1.5 rounded-md hover:bg-zinc-200 transition">+ Add</button>
+                            <label class="block text-sm font-bold text-yellow-500 uppercase tracking-wider" data-i18n="stock_units">Equities</label>
+                            <button type="button" onclick="addAssetRow('stock')" class="text-xs font-bold bg-zinc-800 text-white px-3 py-1.5 rounded-md hover:bg-zinc-700 transition" data-i18n="add_btn">+ Add</button>
                         </div>
-                        <div class="grid grid-cols-12 gap-2 mb-2 px-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-                            <div class="col-span-3">Ticker</div>
-                            <div class="col-span-4">Units</div>
-                            <div class="col-span-4">Avg Cost ($)</div>
+                        <div class="grid grid-cols-12 gap-2 mb-2 px-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest text-center">
+                            <div class="col-span-3 text-left" data-i18n="input_ticker">Ticker</div>
+                            <div class="col-span-4" data-i18n="input_units">Quantity</div>
+                            <div class="col-span-4" data-i18n="input_cost">Avg Price/Unit ($)</div>
                             <div class="col-span-1"></div>
                         </div>
                         <div id="stock-container" class="space-y-3"></div>
                     </div>
 
                     <!-- Crypto Input -->
-                    <div class="mb-4">
+                    <div class="mb-4 border border-zinc-800/50 p-4 rounded-xl bg-black/20">
                         <div class="flex justify-between items-center mb-4">
-                            <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider" data-i18n="crypto_units">Crypto</label>
-                            <button type="button" onclick="addAssetRow('crypto')" class="text-xs font-bold bg-white text-black px-3 py-1.5 rounded-md hover:bg-zinc-200 transition">+ Add</button>
+                            <label class="block text-sm font-bold text-orange-500 uppercase tracking-wider" data-i18n="crypto_units">Crypto</label>
+                            <button type="button" onclick="addAssetRow('crypto')" class="text-xs font-bold bg-zinc-800 text-white px-3 py-1.5 rounded-md hover:bg-zinc-700 transition" data-i18n="add_btn">+ Add</button>
+                        </div>
+                        <div class="grid grid-cols-12 gap-2 mb-2 px-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest text-center">
+                            <div class="col-span-3 text-left" data-i18n="input_ticker">Ticker</div>
+                            <div class="col-span-4" data-i18n="input_units">Quantity</div>
+                            <div class="col-span-4" data-i18n="input_cost">Avg Price/Unit ($)</div>
+                            <div class="col-span-1"></div>
                         </div>
                         <div id="crypto-container" class="space-y-3"></div>
                     </div>
                 </form>
             </div>
 
-            <div class="p-6 border-t border-zinc-800/50 flex gap-3 justify-end">
+            <div class="p-6 border-t border-zinc-800/50 flex gap-3 justify-end bg-black/40 rounded-b-2xl">
                 <button onclick="closeModal()" class="px-6 py-3 rounded-xl text-sm font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 transition" data-i18n="cancel">Cancel</button>
-                <button type="submit" form="daily-form" class="px-8 py-3 bg-white hover:bg-zinc-200 text-black font-bold rounded-xl shadow-lg transition" data-i18n="save">Save Changes</button>
+                <button type="submit" form="daily-form" class="px-8 py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-xl shadow-[0_0_15px_rgba(234,179,8,0.3)] transition" data-i18n="save">Save Changes</button>
             </div>
         </div>
     </div>
@@ -206,7 +231,7 @@
 
         // --- State Variables ---
         let currentCurrency = 'USD';
-        let currentLang = 'en';
+        let currentLang = 'th'; // เริ่มต้นด้วยภาษาไทย
         let jpyRate = 150.0;
         let cachedData = { totalNet: 0, bank: 0, stocksTotal: 0, cryptoTotal: 0, totalCost: 0, holdings: [] };
         let donutChartInstance = null;
@@ -214,8 +239,8 @@
         Chart.defaults.color = '#71717a'; 
         Chart.defaults.font.family = 'Montserrat';
 
-        // NEW DATA STRUCTURE: Added 'avgCost'
-        let portfolio = JSON.parse(localStorage.getItem('wealthPortfolioV7')) || {
+        // DATABASE V8 (รองรับราคาต้นทุนเฉลี่ย Avg Cost)
+        let portfolio = JSON.parse(localStorage.getItem('wealthPortfolioV8')) || {
             bank: 45000,
             stocks: [
                 { ticker: 'MSFT', units: 120, avgCost: 350.00 }, 
@@ -231,26 +256,39 @@
 
         const fallbackPrices = { 'MSFT': 415.50, 'LLY': 760.20, 'ABBV': 162.80, 'ASTS': 28.50, 'BTC': 64000, 'ETH': 3100 };
 
-        // --- DICTIONARY (I18N) ---
+        // --- DICTIONARY (I18N) - รองรับ 3 ภาษา ---
         const dictionary = {
+            th: {
+                title: "แดชบอร์ดความมั่งคั่ง", live_market: "ตลาดเรียลไทม์", update_btn: "จัดการพอร์ตโฟลิโอ",
+                total_net: "มูลค่าสุทธิรวม", invested: "เงินต้นรวม (Cost)", unrealized: "กำไร/ขาดทุน (P/L)", 
+                stocks_val: "มูลค่าหุ้นต่างประเทศ", crypto_val: "มูลค่าคริปโตเคอร์เรนซี", allocation: "สัดส่วนสินทรัพย์", realtime_holdings: "รายการสินทรัพย์ของฉัน",
+                fetching: "กำลังดึงข้อมูลจากตลาด...", sync_done: "ซิงค์ราคาเรียลไทม์สำเร็จ", mock_price: "ใช้ราคาจำลอง (ใส่ API Key เพื่อดูราคาจริง)",
+                asset: "ชื่อสินทรัพย์", avg_cost: "ต้นทุนเฉลี่ย", price: "ราคาปัจจุบัน", units: "จำนวน", current_val: "มูลค่าปัจจุบัน", unrealized_pl: "กำไร/ขาดทุน (P/L)",
+                modal_title: "อัปเดตข้อมูลสินทรัพย์", bank_base: "เงินสดในธนาคาร (สกุล USD)", 
+                stock_units: "หุ้นต่างประเทศ", crypto_units: "คริปโตเคอร์เรนซี", add_btn: "+ เพิ่มรายการ",
+                input_ticker: "ชื่อย่อ (Ticker)", input_units: "จำนวน (Units)", input_cost: "ต้นทุน/หน่วย (Avg Price)",
+                cancel: "ยกเลิก", save: "บันทึกข้อมูล", toast_success: "อัปเดตพอร์ตโฟลิโอเรียบร้อยแล้ว!"
+            },
             en: {
-                title: "Wealth Portfolio", update_btn: "Manage Assets",
-                total_net: "Total Net Worth", total_return: "Total Return", 
+                title: "Wealth Portfolio", live_market: "Live Market", update_btn: "Manage Assets",
+                total_net: "Total Net Worth", invested: "Total Invested (Cost)", unrealized: "Total P/L", 
                 stocks_val: "Equities Value", crypto_val: "Crypto Value", allocation: "Allocation", realtime_holdings: "My Portfolio",
                 fetching: "Connecting to market...", sync_done: "Live sync complete", mock_price: "Using mock prices",
                 asset: "Asset", avg_cost: "Avg Cost", price: "Live Price", units: "Units", current_val: "Market Value", unrealized_pl: "Unrealized P/L",
                 modal_title: "Manage Portfolio Assets", bank_base: "Cash Balance (USD)", 
-                stock_units: "Equities", crypto_units: "Crypto", add_stock: "+ Add", add_crypto: "+ Add",
+                stock_units: "Equities", crypto_units: "Crypto", add_btn: "+ Add",
+                input_ticker: "Ticker", input_units: "Quantity", input_cost: "Avg Price/Unit ($)",
                 cancel: "Cancel", save: "Save Changes", toast_success: "Portfolio successfully updated!"
             },
             jp: {
-                title: "資産ポートフォリオ", update_btn: "資産管理",
-                total_net: "純資産総額", total_return: "トータルリターン", 
+                title: "資産ポートフォリオ", live_market: "リアルタイム", update_btn: "資産管理",
+                total_net: "純資産総額", invested: "総投資額 (元本)", unrealized: "未実現損益 (P/L)", 
                 stocks_val: "株式評価額", crypto_val: "暗号資産評価額", allocation: "資産配分", realtime_holdings: "マイポートフォリオ",
                 fetching: "市場データ取得中...", sync_done: "同期完了", mock_price: "モック価格使用中",
                 asset: "資産", avg_cost: "平均取得単価", price: "現在価格", units: "保有数", current_val: "評価額", unrealized_pl: "未実現損益",
                 modal_title: "保有資産の更新", bank_base: "現金残高 (USDベース)", 
-                stock_units: "株式", crypto_units: "暗号資産", add_stock: "+ 追加", add_crypto: "+ 追加",
+                stock_units: "株式", crypto_units: "暗号資産", add_btn: "+ 追加",
+                input_ticker: "ティッカー", input_units: "数量", input_cost: "取得単価 ($)",
                 cancel: "キャンセル", save: "保存", toast_success: "ポートフォリオが更新されました！"
             }
         };
@@ -258,20 +296,32 @@
         // --- UI TOGGLES ---
         function updateDateDisplay() {
             const dateEl = document.getElementById('current-date');
-            dateEl.innerText = new Date().toLocaleDateString(currentLang === 'jp' ? 'ja-JP' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short' }).toUpperCase();
+            let locale = currentLang === 'th' ? 'th-TH' : (currentLang === 'jp' ? 'ja-JP' : 'en-US');
+            dateEl.innerText = new Date().toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
         }
 
         function setLanguage(lang) {
             currentLang = lang;
-            document.getElementById('btn-en').className = lang === 'en' ? "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white transition shadow" : "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition";
-            document.getElementById('btn-jp').className = lang === 'jp' ? "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white transition shadow" : "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition";
+            
+            // Toggle Button Styles
+            const langs = ['th', 'en', 'jp'];
+            langs.forEach(l => {
+                document.getElementById(`btn-${l}`).className = l === lang 
+                    ? "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white transition shadow" 
+                    : "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition";
+            });
+
+            // Apply translations
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
                 if (dictionary[lang][key]) el.innerText = dictionary[lang][key];
             });
+            
             updateDateDisplay();
+            
+            // Update Sync Status Text
             const statusMsg = document.getElementById('status-msg');
-            if(statusMsg.innerText !== dictionary['en']['fetching'] && statusMsg.innerText !== dictionary['jp']['fetching']) {
+            if(statusMsg.innerText !== dictionary['en']['fetching'] && statusMsg.innerText !== dictionary['jp']['fetching'] && statusMsg.innerText !== dictionary['th']['fetching']) {
                 statusMsg.innerText = FINNHUB_API_KEY ? dictionary[lang]['sync_done'] : dictionary[lang]['mock_price'];
             }
         }
@@ -286,15 +336,21 @@
         function formatMoney(usdValue, isPrice = false, showSign = false) {
             let val = currentCurrency === 'JPY' ? usdValue * jpyRate : usdValue;
             let prefix = currentCurrency === 'JPY' ? '¥' : '$';
-            let sign = showSign ? (usdValue >= 0 ? '+' : '-') : (usdValue < 0 ? '-' : '');
+            let sign = showSign ? (usdValue >= 0 ? '+' : '') : (usdValue < 0 ? '-' : ''); // Remove double negative issue
             let absVal = Math.abs(val);
-            let formatted = absVal.toLocaleString(currentCurrency === 'JPY' ? 'ja-JP' : 'en-US', { minimumFractionDigits: isPrice ? 2 : 2, maximumFractionDigits: 2 });
+            
+            let locale = currentCurrency === 'JPY' ? 'ja-JP' : 'en-US';
+            // Use 0 decimals for Yen total, 2 decimals for USD or exact prices
+            let maxFrac = currentCurrency === 'JPY' && !isPrice ? 0 : 2;
+            let minFrac = currentCurrency === 'JPY' && !isPrice ? 0 : 2;
+            
+            let formatted = absVal.toLocaleString(locale, { minimumFractionDigits: minFrac, maximumFractionDigits: maxFrac });
             return `${sign}${prefix}${formatted}`;
         }
 
         function getPlBadgeStyle(val) {
             if(val > 0) return { textClass: 'text-profit', bgClass: 'bg-profit', sign: '+' };
-            if(val < 0) return { textClass: 'text-loss', bgClass: 'bg-loss', sign: '' };
+            if(val < 0) return { textClass: 'text-loss', bgClass: 'bg-loss', sign: '-' }; // Fix sign display
             return { textClass: 'text-zinc-400', bgClass: 'bg-zinc-800', sign: '' };
         }
 
@@ -334,6 +390,7 @@
             let totalCryptoValue = 0; let totalCryptoCost = 0;
             const liveHoldings = [];
 
+            // Calculate Stocks
             for (let s of portfolio.stocks) {
                 let price = await fetchPrice('stock', s.ticker);
                 let val = s.units * price;
@@ -342,9 +399,10 @@
                 let plPct = cost > 0 ? (pl / cost) * 100 : 0;
                 
                 totalStocksValue += val; totalStocksCost += cost;
-                liveHoldings.push({ ticker: s.ticker, type: 'Stock', units: s.units, avgCostUsd: s.avgCost, priceUsd: price, valueUsd: val, plUsd: pl, plPct: plPct, iconColor: 'bg-yellow-500' });
+                liveHoldings.push({ ticker: s.ticker, type: 'Stock', units: s.units, avgCostUsd: s.avgCost, priceUsd: price, valueUsd: val, plUsd: pl, plPct: plPct, iconColor: 'bg-yellow-500 text-black' });
             }
 
+            // Calculate Crypto
             for (let c of portfolio.crypto) {
                 let price = await fetchPrice('crypto', c.ticker);
                 let val = c.units * price;
@@ -353,7 +411,7 @@
                 let plPct = cost > 0 ? (pl / cost) * 100 : 0;
 
                 totalCryptoValue += val; totalCryptoCost += cost;
-                liveHoldings.push({ ticker: c.ticker, type: 'Crypto', units: c.units, avgCostUsd: c.avgCost, priceUsd: price, valueUsd: val, plUsd: pl, plPct: plPct, iconColor: 'bg-orange-500' });
+                liveHoldings.push({ ticker: c.ticker, type: 'Crypto', units: c.units, avgCostUsd: c.avgCost, priceUsd: price, valueUsd: val, plUsd: pl, plPct: plPct, iconColor: 'bg-orange-500 text-black' });
             }
 
             cachedData = {
@@ -373,49 +431,52 @@
 
         // --- RENDER UI ---
         function renderUI() {
-            // Total Net Worth
+            // Hero Numbers
             document.getElementById('val-total').innerText = formatMoney(cachedData.totalNet);
+            document.getElementById('val-cost').innerText = formatMoney(cachedData.totalCost);
             
-            // Total P/L Calculation
+            // P/L Badge (Dime Style)
             let totalPl = cachedData.totalNet - cachedData.totalCost;
             let totalPlPct = cachedData.totalCost > 0 ? (totalPl / cachedData.totalCost) * 100 : 0;
-            let plStyle = getPlBadgeStyle(totalPl);
+            let plStyle = getPlBadgeStyle(totalPlPct);
             
-            const returnBadge = document.getElementById('total-return-badge');
-            returnBadge.className = `px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 ${plStyle.bgClass} ${plStyle.textClass}`;
+            document.getElementById('val-return-amt').className = `text-sm font-bold ${plStyle.textClass}`;
             document.getElementById('val-return-amt').innerText = formatMoney(totalPl, false, true);
-            document.getElementById('val-return-pct').innerText = `${plStyle.sign}${totalPlPct.toFixed(2)}%`;
+            
+            document.getElementById('val-return-pct').className = `text-xs font-bold px-1.5 py-0.5 rounded ${plStyle.bgClass} ${plStyle.textClass}`;
+            document.getElementById('val-return-pct').innerText = `${plStyle.sign}${Math.abs(totalPlPct).toFixed(2)}%`;
 
             // Sub-Cards
             document.getElementById('val-bank').innerText = formatMoney(cachedData.bank);
             document.getElementById('val-stocks').innerText = formatMoney(cachedData.stocksTotal);
             document.getElementById('val-crypto').innerText = formatMoney(cachedData.cryptoTotal);
 
-            // Sub-Cards P/L Badges
+            // Stock Sub-Badge
             let stockPl = cachedData.stocksTotal - cachedData.stocksCost;
             let stockPlPct = cachedData.stocksCost > 0 ? (stockPl / cachedData.stocksCost) * 100 : 0;
             let stStyle = getPlBadgeStyle(stockPlPct);
             let stBadge = document.getElementById('stock-return-badge');
             stBadge.className = `inline-flex px-2 py-1 rounded text-xs font-bold w-fit mt-1 ${stStyle.bgClass} ${stStyle.textClass}`;
-            stBadge.innerText = `${stStyle.sign}${stockPlPct.toFixed(2)}%`;
+            stBadge.innerText = `${stStyle.sign}${Math.abs(stockPlPct).toFixed(2)}%`;
 
+            // Crypto Sub-Badge
             let cryptoPl = cachedData.cryptoTotal - cachedData.cryptoCost;
             let cryptoPlPct = cachedData.cryptoCost > 0 ? (cryptoPl / cachedData.cryptoCost) * 100 : 0;
             let crStyle = getPlBadgeStyle(cryptoPlPct);
             let crBadge = document.getElementById('crypto-return-badge');
             crBadge.className = `inline-flex px-2 py-1 rounded text-xs font-bold w-fit mt-1 ${crStyle.bgClass} ${crStyle.textClass}`;
-            crBadge.innerText = `${crStyle.sign}${cryptoPlPct.toFixed(2)}%`;
+            crBadge.innerText = `${crStyle.sign}${Math.abs(cryptoPlPct).toFixed(2)}%`;
 
-            // Holdings Table
+            // Holdings Table Generation
             const tbody = document.getElementById('holdings-table-body');
             tbody.innerHTML = '';
             cachedData.holdings.sort((a, b) => b.valueUsd - a.valueUsd).forEach(asset => {
                 let assetPlStyle = getPlBadgeStyle(asset.plPct);
                 tbody.innerHTML += `
-                <tr class="border-b border-zinc-800/50 hover:bg-zinc-900/50 transition">
-                    <td class="py-4 pl-2">
+                <tr class="border-b border-zinc-800/50 hover:bg-zinc-800/50 transition">
+                    <td class="py-4 pl-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full ${asset.iconColor} flex items-center justify-center text-black font-bold text-xs">${asset.ticker.substring(0,2)}</div>
+                            <div class="w-9 h-9 rounded-full ${asset.iconColor} flex items-center justify-center font-bold text-xs shadow-lg">${asset.ticker.substring(0,3)}</div>
                             <div>
                                 <div class="font-bold text-white text-base">${asset.ticker}</div>
                                 <div class="text-[10px] text-zinc-500 uppercase tracking-widest">${asset.type}</div>
@@ -423,25 +484,25 @@
                         </div>
                     </td>
                     <td class="py-4 text-right text-zinc-400 font-medium">${formatMoney(asset.avgCostUsd, true)}</td>
-                    <td class="py-4 text-right text-white font-medium">${formatMoney(asset.priceUsd, true)}</td>
+                    <td class="py-4 text-right text-white font-medium bg-white/5 rounded-lg my-1">${formatMoney(asset.priceUsd, true)}</td>
                     <td class="py-4 text-right text-zinc-300 font-medium">${asset.units.toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:4})}</td>
                     <td class="py-4 text-right font-bold text-white">${formatMoney(asset.valueUsd)}</td>
-                    <td class="py-4 text-right pr-2">
+                    <td class="py-4 text-right pr-4">
                         <div class="flex flex-col items-end">
-                            <span class="font-bold ${assetPlStyle.textClass}">${formatMoney(asset.plUsd, false, true)}</span>
-                            <span class="text-xs font-semibold px-1.5 py-0.5 rounded mt-1 ${assetPlStyle.bgClass} ${assetPlStyle.textClass}">${assetPlStyle.sign}${asset.plPct.toFixed(2)}%</span>
+                            <span class="font-bold text-[15px] ${assetPlStyle.textClass}">${formatMoney(asset.plUsd, false, true)}</span>
+                            <span class="text-[11px] font-bold px-1.5 py-0.5 rounded mt-1 tracking-wider ${assetPlStyle.bgClass} ${assetPlStyle.textClass}">${assetPlStyle.sign}${Math.abs(asset.plPct).toFixed(2)}%</span>
                         </div>
                     </td>
                 </tr>`;
             });
 
-            // Chart Update (Minimalist Donut)
+            // Allocation Donut Chart
             const ctx = document.getElementById('allocationChart').getContext('2d');
             if (donutChartInstance) donutChartInstance.destroy();
             donutChartInstance = new Chart(ctx, {
                 type: 'doughnut',
-                data: { labels: ['Cash', 'Equities', 'Crypto'], datasets: [{ data: [cachedData.bank, cachedData.stocksTotal, cachedData.cryptoTotal], backgroundColor: ['#ffffff', '#eab308', '#f97316'], borderWidth: 0, hoverOffset: 4 }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { legend: { display: false } }, animation: { duration: 800, easing: 'easeOutQuart' } }
+                data: { labels: ['Cash', 'Equities', 'Crypto'], datasets: [{ data: [cachedData.bank, cachedData.stocksTotal, cachedData.cryptoTotal], backgroundColor: ['#ffffff', '#eab308', '#f97316'], borderWidth: 0, hoverOffset: 5 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '78%', plugins: { legend: { display: false } }, animation: { duration: 1000, easing: 'easeOutQuart' } }
             });
         }
 
@@ -469,7 +530,7 @@
             const card = modal.querySelector('.glass-card');
             card.classList.remove('modal-enter');
             card.classList.add('modal-exit');
-            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+            setTimeout(() => { modal.classList.add('hidden'); }, 200);
         }
         
         function showToast(msg) {
@@ -479,23 +540,25 @@
             setTimeout(() => t.classList.add('translate-y-[150%]', 'opacity-0'), 3000);
         }
 
-        // Updated row to include Avg Cost input
+        // Add Asset Row Function (Includes Cost)
         function addAssetRow(type, ticker = '', units = '', avgCost = '') {
             const container = document.getElementById(`${type}-container`);
             const row = document.createElement('div');
             row.className = `grid grid-cols-12 gap-2 items-center ${type}-row`;
             row.innerHTML = `
-                <div class="col-span-3"><input type="text" placeholder="Ticker" value="${ticker}" required class="asset-ticker w-full bg-black border border-zinc-800 text-white p-2.5 rounded-lg text-sm uppercase focus:outline-none focus:border-emerald-500 text-center"></div>
-                <div class="col-span-4"><input type="number" step="any" placeholder="Units" value="${units}" required class="asset-units w-full bg-black border border-zinc-800 text-white p-2.5 rounded-lg text-sm focus:outline-none focus:border-emerald-500"></div>
-                <div class="col-span-4"><input type="number" step="any" placeholder="Cost" value="${avgCost}" required class="asset-avgcost w-full bg-black border border-zinc-800 text-white p-2.5 rounded-lg text-sm focus:outline-none focus:border-emerald-500"></div>
-                <div class="col-span-1 text-center"><button type="button" onclick="this.parentElement.parentElement.remove()" class="text-zinc-600 hover:text-rose-500 transition"><svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div>
+                <div class="col-span-3"><input type="text" placeholder="e.g. AAPL" value="${ticker}" required class="asset-ticker w-full bg-black border border-zinc-700 text-white p-2.5 rounded-lg text-sm uppercase focus:outline-none focus:border-yellow-500 font-bold"></div>
+                <div class="col-span-4"><input type="number" step="any" placeholder="0.00" value="${units}" required class="asset-units w-full bg-black border border-zinc-700 text-white p-2.5 rounded-lg text-sm focus:outline-none focus:border-yellow-500 font-medium"></div>
+                <div class="col-span-4"><input type="number" step="any" placeholder="$0.00" value="${avgCost}" required class="asset-avgcost w-full bg-black border border-zinc-700 text-white p-2.5 rounded-lg text-sm focus:outline-none focus:border-yellow-500 font-medium"></div>
+                <div class="col-span-1 text-center"><button type="button" onclick="this.parentElement.parentElement.remove()" class="text-zinc-500 hover:text-red-500 transition"><svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div>
             `;
             container.appendChild(row);
         }
 
+        // Save Data Logic
         document.getElementById('daily-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const bank = parseFloat(document.getElementById('input-bank').value) || 0;
+            
             const stocks = []; 
             document.querySelectorAll('.stock-row').forEach(row => { 
                 const t = row.querySelector('.asset-ticker').value.toUpperCase(); 
@@ -503,6 +566,7 @@
                 const c = parseFloat(row.querySelector('.asset-avgcost').value) || 0;
                 if(t) stocks.push({ticker: t, units: u, avgCost: c}); 
             });
+            
             const crypto = []; 
             document.querySelectorAll('.crypto-row').forEach(row => { 
                 const t = row.querySelector('.asset-ticker').value.toUpperCase(); 
@@ -512,7 +576,7 @@
             });
             
             portfolio = { bank, stocks, crypto };
-            localStorage.setItem('wealthPortfolioV7', JSON.stringify(portfolio));
+            localStorage.setItem('wealthPortfolioV8', JSON.stringify(portfolio));
             closeModal(); 
             showToast(dictionary[currentLang]['toast_success']); 
             processLiveDashboard();
@@ -520,7 +584,7 @@
 
         // --- BOOTSTRAP ---
         updateDateDisplay();
-        setLanguage('en');
+        setLanguage('th'); // เปิดมาให้เป็นภาษาไทยเลย
         processLiveDashboard();
     </script>
 </body>
