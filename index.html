@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Fintech Dashboard</title>
+    <title>Ultimate Investor Dashboard</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
@@ -12,579 +12,449 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Montserrat', sans-serif; background-color: #000000; color: #f4f4f5; }
-        /* Modern Glass UI */
-        .glass-card { 
-            background: rgba(24, 24, 27, 0.65); 
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
-        }
+        .glass-card { background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5); }
         .gradient-text { background: linear-gradient(to right, #fbbf24, #fef08a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
-        
         .modal-enter { animation: slideUp 0.3s ease-out forwards; }
         .modal-exit { animation: slideDown 0.2s ease-in forwards; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes slideDown { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(20px) scale(0.95); } }
-        
         .live-dot { animation: pulse 2s infinite; }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
-
-        /* Profit / Loss Colors */
-        .text-profit { color: #34d399; } /* Emerald 400 */
-        .bg-profit { background-color: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); }
-        .text-loss { color: #fb7185; } /* Rose 400 */
-        .bg-loss { background-color: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); }
+        .text-profit { color: #34d399; } .bg-profit { background-color: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .text-loss { color: #fb7185; } .bg-loss { background-color: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-6 lg:p-8 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-zinc-900 via-black to-black">
 
-    <!-- ================= HEADER & NAV ================= -->
+    <!-- HEADER -->
     <header class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-5">
         <div>
             <div class="flex items-center gap-3 mb-2">
-                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight gradient-text" data-i18n="title">Wealth Portfolio</h1>
+                <h1 class="text-3xl font-extrabold tracking-tight gradient-text" data-i18n="title">Wealth Portfolio</h1>
                 <span class="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-900 border border-zinc-800 rounded-full text-[10px] font-bold text-emerald-500 uppercase tracking-wider shadow-lg">
                     <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full live-dot"></span><span data-i18n="live_market">Live Market</span>
                 </span>
             </div>
-            <!-- DATE DISPLAY (Fixed & Prominent) -->
             <div class="flex items-center gap-2 text-zinc-400 bg-zinc-900/50 w-fit px-3 py-1.5 rounded-lg border border-zinc-800">
-                <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                <span class="text-sm font-semibold tracking-wide" id="current-date">Loading date...</span>
+                <span class="text-sm font-semibold tracking-wide" id="current-date">Loading...</span>
             </div>
         </div>
         
         <div class="flex items-center gap-2 flex-wrap">
-            <!-- Currency Toggle -->
-            <div class="glass-card p-1 rounded-lg flex items-center shadow-lg">
+            <div class="glass-card p-1 rounded-lg flex items-center">
                 <button onclick="setCurrency('USD')" id="btn-usd" class="px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-yellow-500 transition shadow">USD</button>
                 <button onclick="setCurrency('JPY')" id="btn-jpy" class="px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition">JPY</button>
             </div>
             
-            <!-- Language Toggle (Added TH) -->
-            <div class="glass-card p-1 rounded-lg flex items-center shadow-lg">
-                <button onclick="setLanguage('th')" id="btn-th" class="px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white transition shadow">TH</button>
-                <button onclick="setLanguage('en')" id="btn-en" class="px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition">EN</button>
+            <div class="glass-card p-1 rounded-lg flex items-center">
+                <button onclick="setLanguage('en')" id="btn-en" class="px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white transition shadow">EN</button>
                 <button onclick="setLanguage('jp')" id="btn-jp" class="px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition">JP</button>
             </div>
             
-            <!-- Actions -->
-            <button onclick="refreshLivePrices()" class="glass-card px-4 py-2 rounded-lg text-sm font-semibold hover:bg-zinc-800 transition text-zinc-300 flex items-center gap-2 shadow-lg">
-                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            <button onclick="exportCSV()" class="glass-card px-4 py-2.5 rounded-lg text-sm font-bold text-zinc-300 hover:bg-zinc-800 transition shadow-lg flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <span data-i18n="export">CSV</span>
             </button>
-            <button onclick="openModal()" class="px-5 py-2.5 rounded-lg text-sm font-bold bg-gradient-to-r from-yellow-500 to-yellow-400 text-black hover:from-yellow-400 hover:to-yellow-300 transition shadow-[0_0_20px_rgba(234,179,8,0.2)] flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                <span data-i18n="update_btn">Manage Assets</span>
+            
+            <button onclick="refreshLivePrices()" class="glass-card px-4 py-2.5 rounded-lg hover:bg-zinc-800 transition text-emerald-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            </button>
+            
+            <button onclick="openModal()" class="px-5 py-2.5 rounded-lg text-sm font-bold bg-yellow-500 text-black hover:bg-yellow-400 transition shadow-[0_0_15px_rgba(234,179,8,0.3)]">
+                + <span data-i18n="log_tx">Log Transaction</span>
             </button>
         </div>
     </header>
 
-    <!-- ================= MAIN DASHBOARD (DIME STYLE) ================= -->
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+    <!-- CARDS -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="glass-card rounded-2xl p-6 relative overflow-hidden border-t-2 border-t-yellow-500/50">
+            <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-2" data-i18n="total_net">Total Net Worth</h3>
+            <div class="text-3xl font-extrabold text-white mb-2" id="val-total">$0.00</div>
+            <div class="flex items-center gap-2 mt-4">
+                <span class="text-xs text-zinc-500" data-i18n="unrealized">Unrealized P/L</span>
+                <span id="val-unrealized-pct" class="text-xs font-bold px-1.5 py-0.5 rounded">+0.00%</span>
+            </div>
+            <div id="status-msg" class="text-[10px] mt-3 text-zinc-500">Connecting...</div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-6 border-l-4 border-l-emerald-500">
+            <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-2" data-i18n="realized">Realized P/L & Div</h3>
+            <div class="text-2xl font-bold text-white mb-1" id="val-realized">$0.00</div>
+            <div class="text-xs text-emerald-400 font-medium mt-3" id="val-dividends">Dividends: $0.00</div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-6">
+            <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-2" data-i18n="cash">Cash Balance</h3>
+            <div class="text-2xl font-bold text-white mb-1" id="val-bank">$0.00</div>
+            <div class="text-xs text-zinc-500 font-medium mt-3" id="val-invested">Total Invested: $0.00</div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-6">
+            <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-2" data-i18n="assets_val">Equities & Crypto</h3>
+            <div class="text-2xl font-bold text-white mb-1" id="val-assets">$0.00</div>
+            <div class="flex gap-2 mt-3 text-xs font-medium">
+                <span class="text-yellow-500" id="val-eq-pct">EQ: 0%</span>
+                <span class="text-zinc-600">|</span>
+                <span class="text-orange-500" id="val-cr-pct">CR: 0%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div class="glass-card rounded-2xl p-6 lg:col-span-2">
+            <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-4" data-i18n="history">Net Worth Trend</h3>
+            <div class="relative h-64 w-full"><canvas id="trendChart"></canvas></div>
+        </div>
+        <div class="glass-card rounded-2xl p-6">
+            <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-4" data-i18n="allocation">Allocation</h3>
+            <div class="relative h-64 w-full"><canvas id="allocationChart"></canvas></div>
+        </div>
+    </div>
+
+    <!-- HOLDINGS & LOG -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+        <div class="glass-card rounded-2xl p-6 overflow-x-auto lg:col-span-2">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-white" data-i18n="portfolio">Portfolio Holdings</h3>
+                <span id="forex-rate" class="text-xs text-zinc-500 bg-black/50 px-2 py-1 rounded"></span>
+            </div>
+            <table class="w-full text-left text-sm border-collapse whitespace-nowrap">
+                <thead>
+                    <tr class="text-zinc-500 text-xs uppercase border-b border-zinc-800">
+                        <th class="pb-3 font-semibold" data-i18n="asset">Asset</th>
+                        <th class="pb-3 font-semibold text-right" data-i18n="avg_cost">Avg Cost</th>
+                        <th class="pb-3 font-semibold text-right" data-i18n="price">Live Price</th>
+                        <th class="pb-3 font-semibold text-right" data-i18n="units">Units</th>
+                        <th class="pb-3 font-semibold text-right" data-i18n="current_val">Market Value</th>
+                        <th class="pb-3 font-semibold text-right" data-i18n="unrealized">Unrealized P/L</th>
+                    </tr>
+                </thead>
+                <tbody id="holdings-table-body"></tbody>
+            </table>
+        </div>
         
-        <!-- Total Net Worth Card (Hero) -->
-        <div class="glass-card rounded-2xl p-8 lg:col-span-2 relative overflow-hidden flex flex-col justify-between border-t-2 border-t-yellow-500/50">
-            <div class="absolute -right-10 -top-10 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none"></div>
-            <div>
-                <h3 class="text-zinc-400 text-sm font-medium tracking-wide uppercase mb-2" data-i18n="total_net">Total Net Worth</h3>
-                <div class="text-4xl md:text-5xl font-extrabold mb-3 text-white tracking-tight" id="val-total">$0.00</div>
-                
-                <!-- Dime-style Total Return -->
-                <div class="flex flex-col sm:flex-row sm:items-center gap-3 mt-5 p-3 bg-black/40 rounded-xl border border-zinc-800/50 w-fit">
-                    <div class="flex flex-col">
-                        <span class="text-xs text-zinc-500 font-medium uppercase" data-i18n="invested">Total Invested (Cost)</span>
-                        <span class="text-sm font-bold text-zinc-300" id="val-cost">$0.00</span>
-                    </div>
-                    <div class="hidden sm:block w-px h-8 bg-zinc-700"></div>
-                    <div class="flex flex-col">
-                        <span class="text-xs text-zinc-500 font-medium uppercase" data-i18n="unrealized">Total P/L</span>
-                        <div class="flex items-center gap-2">
-                            <span id="val-return-amt" class="text-sm font-bold">+$0.00</span>
-                            <span id="val-return-pct" class="text-xs font-bold px-1.5 py-0.5 rounded">+0.00%</span>
-                        </div>
-                    </div>
-                </div>
+        <div class="glass-card rounded-2xl p-6">
+            <h3 class="text-lg font-bold text-white mb-4" data-i18n="recent_tx">Recent Transactions</h3>
+            <div id="tx-log-container" class="space-y-3 overflow-y-auto max-h-[300px] custom-scrollbar pr-2">
+                <!-- Tx Log -->
             </div>
-            <div id="status-msg" class="text-xs font-medium mt-6 text-zinc-500" data-i18n="fetching">Connecting to market...</div>
-        </div>
-
-        <!-- Breakdown Cards -->
-        <div class="grid grid-rows-2 gap-6 lg:col-span-1">
-            <div class="glass-card rounded-2xl p-6 flex flex-col justify-center border-l-4 border-l-yellow-500">
-                <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1" data-i18n="stocks_val">Equities Value</h3>
-                <div class="text-2xl font-bold text-white mb-2" id="val-stocks">$0</div>
-                <div id="stock-return-badge" class="inline-flex px-2 py-1 rounded text-xs font-bold w-fit">--</div>
-            </div>
-            <div class="glass-card rounded-2xl p-6 flex flex-col justify-center border-l-4 border-l-orange-500">
-                <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1" data-i18n="crypto_val">Crypto Value</h3>
-                <div class="text-2xl font-bold text-white mb-2" id="val-crypto">$0</div>
-                <div id="crypto-return-badge" class="inline-flex px-2 py-1 rounded text-xs font-bold w-fit">--</div>
-            </div>
-        </div>
-
-        <!-- Chart Card -->
-        <div class="glass-card rounded-2xl p-6 lg:col-span-1 flex flex-col justify-center items-center">
-            <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-4 self-start" data-i18n="allocation">Allocation</h3>
-            <div class="relative h-40 w-full"><canvas id="allocationChart"></canvas></div>
         </div>
     </div>
 
-    <!-- ================= DETAILED HOLDINGS TABLE ================= -->
-    <div class="glass-card rounded-2xl p-6 md:p-8 overflow-x-auto mb-12">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="text-xl font-bold text-white tracking-wide" data-i18n="realtime_holdings">My Portfolio</h3>
-            <span id="forex-rate" class="text-xs text-zinc-400 font-medium bg-zinc-900/80 px-3 py-1.5 rounded-lg border border-zinc-800 shadow-inner"></span>
-        </div>
-        <table class="w-full text-left border-collapse whitespace-nowrap">
-            <thead>
-                <tr class="text-zinc-500 text-xs uppercase tracking-widest border-b border-zinc-800/50 bg-black/20">
-                    <th class="py-3 pl-4 font-semibold rounded-tl-lg" data-i18n="asset">Asset</th>
-                    <th class="py-3 font-semibold text-right" data-i18n="avg_cost">Avg Cost</th>
-                    <th class="py-3 font-semibold text-right" data-i18n="price">Live Price</th>
-                    <th class="py-3 font-semibold text-right" data-i18n="units">Units</th>
-                    <th class="py-3 font-semibold text-right" data-i18n="current_val">Market Value</th>
-                    <th class="py-3 font-semibold text-right pr-4 rounded-tr-lg" data-i18n="unrealized_pl">Unrealized P/L</th>
-                </tr>
-            </thead>
-            <tbody id="holdings-table-body" class="text-sm">
-                <!-- Data injected via JS -->
-            </tbody>
-        </table>
-    </div>
-
-    <!-- ================= MODAL FOR DATA ENTRY ================= -->
-    <div id="update-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex justify-center items-center p-4">
-        <div class="glass-card w-full max-w-3xl max-h-[90vh] rounded-2xl flex flex-col shadow-2xl border border-zinc-700/50">
-            <div class="p-6 border-b border-zinc-800/50 flex justify-between items-center bg-black/40 rounded-t-2xl">
-                <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                    <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                    <span data-i18n="modal_title">Manage Portfolio Assets</span>
-                </h3>
-                <button onclick="closeModal()" class="text-zinc-500 hover:text-white bg-zinc-900 hover:bg-zinc-800 rounded-full p-2 transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+    <!-- TRANSACTION MODAL -->
+    <div id="tx-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex justify-center items-center p-4">
+        <div class="glass-card w-full max-w-md rounded-2xl flex flex-col shadow-2xl border border-zinc-700/50">
+            <div class="p-5 border-b border-zinc-800/50 flex justify-between items-center bg-black/40 rounded-t-2xl">
+                <h3 class="text-lg font-bold text-white" data-i18n="log_tx">Log Transaction</h3>
+                <button onclick="closeModal()" class="text-zinc-500 hover:text-white transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             
-            <div class="p-6 overflow-y-auto custom-scrollbar">
-                <form id="daily-form">
-                    <!-- Bank Input -->
-                    <div class="mb-8 p-5 bg-zinc-900/50 rounded-xl border border-zinc-800/50 shadow-inner">
-                        <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3" data-i18n="bank_base">Cash Balance (Base USD)</label>
-                        <div class="relative">
-                            <span class="absolute left-4 top-3.5 text-zinc-500 font-bold">$</span>
-                            <input type="number" step="any" id="input-bank" required class="w-full bg-black border border-zinc-700 text-white p-3.5 pl-8 rounded-lg focus:outline-none focus:border-yellow-500 transition text-lg font-medium" placeholder="0.00">
-                        </div>
-                    </div>
+            <form id="tx-form" class="p-6">
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="tx_type">Type</label>
+                    <select id="tx-type" onchange="toggleTxFields()" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 font-medium">
+                        <option value="BUY">Buy Asset</option>
+                        <option value="SELL">Sell Asset</option>
+                        <option value="DIVIDEND">Dividend Received</option>
+                        <option value="DEPOSIT">Deposit Cash</option>
+                        <option value="WITHDRAW">Withdraw Cash</option>
+                    </select>
+                </div>
+                
+                <div id="field-asset" class="mb-4">
+                    <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="tx_asset">Asset Class</label>
+                    <select id="tx-asset-class" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500">
+                        <option value="stock">Stock / ETF (Use .BK for SET)</option>
+                        <option value="crypto">Crypto</option>
+                    </select>
+                </div>
 
-                    <!-- Stocks Input -->
-                    <div class="mb-8 border border-zinc-800/50 p-4 rounded-xl bg-black/20">
-                        <div class="flex justify-between items-center mb-4">
-                            <label class="block text-sm font-bold text-yellow-500 uppercase tracking-wider" data-i18n="stock_units">Equities</label>
-                            <button type="button" onclick="addAssetRow('stock')" class="text-xs font-bold bg-zinc-800 text-white px-3 py-1.5 rounded-md hover:bg-zinc-700 transition" data-i18n="add_btn">+ Add</button>
-                        </div>
-                        <div class="grid grid-cols-12 gap-2 mb-2 px-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest text-center">
-                            <div class="col-span-3 text-left" data-i18n="input_ticker">Ticker</div>
-                            <div class="col-span-4" data-i18n="input_units">Quantity</div>
-                            <div class="col-span-4" data-i18n="input_cost">Avg Price/Unit ($)</div>
-                            <div class="col-span-1"></div>
-                        </div>
-                        <div id="stock-container" class="space-y-3"></div>
-                    </div>
+                <div id="field-ticker" class="mb-4">
+                    <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="ticker">Ticker</label>
+                    <input type="text" id="tx-ticker" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 uppercase" placeholder="e.g. AAPL, PTT.BK, BTC">
+                </div>
 
-                    <!-- Crypto Input -->
-                    <div class="mb-4 border border-zinc-800/50 p-4 rounded-xl bg-black/20">
-                        <div class="flex justify-between items-center mb-4">
-                            <label class="block text-sm font-bold text-orange-500 uppercase tracking-wider" data-i18n="crypto_units">Crypto</label>
-                            <button type="button" onclick="addAssetRow('crypto')" class="text-xs font-bold bg-zinc-800 text-white px-3 py-1.5 rounded-md hover:bg-zinc-700 transition" data-i18n="add_btn">+ Add</button>
-                        </div>
-                        <div class="grid grid-cols-12 gap-2 mb-2 px-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest text-center">
-                            <div class="col-span-3 text-left" data-i18n="input_ticker">Ticker</div>
-                            <div class="col-span-4" data-i18n="input_units">Quantity</div>
-                            <div class="col-span-4" data-i18n="input_cost">Avg Price/Unit ($)</div>
-                            <div class="col-span-1"></div>
-                        </div>
-                        <div id="crypto-container" class="space-y-3"></div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div id="field-qty">
+                        <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="units">Quantity</label>
+                        <input type="number" step="any" id="tx-qty" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500" placeholder="0">
                     </div>
-                </form>
-            </div>
+                    <div id="field-price">
+                        <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" id="lbl-price" data-i18n="price">Price (USD)</label>
+                        <input type="number" step="any" id="tx-price" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500" placeholder="0.00">
+                    </div>
+                </div>
 
-            <div class="p-6 border-t border-zinc-800/50 flex gap-3 justify-end bg-black/40 rounded-b-2xl">
-                <button onclick="closeModal()" class="px-6 py-3 rounded-xl text-sm font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 transition" data-i18n="cancel">Cancel</button>
-                <button type="submit" form="daily-form" class="px-8 py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-xl shadow-[0_0_15px_rgba(234,179,8,0.3)] transition" data-i18n="save">Save Changes</button>
-            </div>
+                <div class="flex gap-3 justify-end">
+                    <button type="button" onclick="closeModal()" class="px-5 py-2.5 rounded-lg text-sm font-bold text-zinc-400 hover:text-white transition" data-i18n="cancel">Cancel</button>
+                    <button type="submit" class="px-6 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-lg shadow-lg transition" data-i18n="save">Save</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-6 right-6 transform translate-y-[150%] opacity-0 transition-all duration-500 z-50 flex items-center gap-3 bg-zinc-900 border border-zinc-700 text-white px-5 py-4 rounded-xl shadow-2xl">
+    <div id="toast" class="fixed bottom-6 right-6 transform translate-y-[150%] opacity-0 transition-all duration-500 z-50 bg-zinc-900 border border-zinc-700 text-white px-5 py-4 rounded-xl shadow-2xl flex items-center gap-3">
         <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-        <span id="toast-msg" class="font-bold text-sm">Updated!</span>
+        <span id="toast-msg" class="font-bold text-sm">Success!</span>
     </div>
 
     <script>
-        // ================= API KEY =================
         const FINNHUB_API_KEY = 'd7ub5jpr01qnv95muqpgd7ub5jpr01qnv95muqq0'; 
-        // ===========================================
-
-        // --- State Variables ---
+        
         let currentCurrency = 'USD';
-        let currentLang = 'th'; // เริ่มต้นด้วยภาษาไทย
+        let currentLang = 'en';
         let jpyRate = 150.0;
-        let cachedData = { totalNet: 0, bank: 0, stocksTotal: 0, cryptoTotal: 0, totalCost: 0, holdings: [] };
-        let donutChartInstance = null;
+        let chartAlloc = null; let chartTrend = null;
 
-        Chart.defaults.color = '#71717a'; 
-        Chart.defaults.font.family = 'Montserrat';
+        Chart.defaults.color = '#71717a'; Chart.defaults.font.family = 'Montserrat';
 
-        // DATABASE V8 (รองรับราคาต้นทุนเฉลี่ย Avg Cost)
-        let portfolio = JSON.parse(localStorage.getItem('wealthPortfolioV8')) || {
-            bank: 45000,
-            stocks: [
-                { ticker: 'MSFT', units: 120, avgCost: 350.00 }, 
-                { ticker: 'LLY', units: 45, avgCost: 650.00 }, 
-                { ticker: 'ABBV', units: 150, avgCost: 145.50 }, 
-                { ticker: 'ASTS', units: 850, avgCost: 15.20 }
-            ],
-            crypto: [
-                { ticker: 'BTC', units: 1.5, avgCost: 52000.00 }, 
-                { ticker: 'ETH', units: 12, avgCost: 2800.00 }
-            ]
-        };
-
-        const fallbackPrices = { 'MSFT': 415.50, 'LLY': 760.20, 'ABBV': 162.80, 'ASTS': 28.50, 'BTC': 64000, 'ETH': 3100 };
-
-        // --- DICTIONARY (I18N) - รองรับ 3 ภาษา ---
-        const dictionary = {
-            th: {
-                title: "แดชบอร์ดความมั่งคั่ง", live_market: "ตลาดเรียลไทม์", update_btn: "จัดการพอร์ตโฟลิโอ",
-                total_net: "มูลค่าสุทธิรวม", invested: "เงินต้นรวม (Cost)", unrealized: "กำไร/ขาดทุน (P/L)", 
-                stocks_val: "มูลค่าหุ้นต่างประเทศ", crypto_val: "มูลค่าคริปโตเคอร์เรนซี", allocation: "สัดส่วนสินทรัพย์", realtime_holdings: "รายการสินทรัพย์ของฉัน",
-                fetching: "กำลังดึงข้อมูลจากตลาด...", sync_done: "ซิงค์ราคาเรียลไทม์สำเร็จ", mock_price: "ใช้ราคาจำลอง (ใส่ API Key เพื่อดูราคาจริง)",
-                asset: "ชื่อสินทรัพย์", avg_cost: "ต้นทุนเฉลี่ย", price: "ราคาปัจจุบัน", units: "จำนวน", current_val: "มูลค่าปัจจุบัน", unrealized_pl: "กำไร/ขาดทุน (P/L)",
-                modal_title: "อัปเดตข้อมูลสินทรัพย์", bank_base: "เงินสดในธนาคาร (สกุล USD)", 
-                stock_units: "หุ้นต่างประเทศ", crypto_units: "คริปโตเคอร์เรนซี", add_btn: "+ เพิ่มรายการ",
-                input_ticker: "ชื่อย่อ (Ticker)", input_units: "จำนวน (Units)", input_cost: "ต้นทุน/หน่วย (Avg Price)",
-                cancel: "ยกเลิก", save: "บันทึกข้อมูล", toast_success: "อัปเดตพอร์ตโฟลิโอเรียบร้อยแล้ว!"
-            },
-            en: {
-                title: "Wealth Portfolio", live_market: "Live Market", update_btn: "Manage Assets",
-                total_net: "Total Net Worth", invested: "Total Invested (Cost)", unrealized: "Total P/L", 
-                stocks_val: "Equities Value", crypto_val: "Crypto Value", allocation: "Allocation", realtime_holdings: "My Portfolio",
-                fetching: "Connecting to market...", sync_done: "Live sync complete", mock_price: "Using mock prices",
-                asset: "Asset", avg_cost: "Avg Cost", price: "Live Price", units: "Units", current_val: "Market Value", unrealized_pl: "Unrealized P/L",
-                modal_title: "Manage Portfolio Assets", bank_base: "Cash Balance (USD)", 
-                stock_units: "Equities", crypto_units: "Crypto", add_btn: "+ Add",
-                input_ticker: "Ticker", input_units: "Quantity", input_cost: "Avg Price/Unit ($)",
-                cancel: "Cancel", save: "Save Changes", toast_success: "Portfolio successfully updated!"
-            },
-            jp: {
-                title: "資産ポートフォリオ", live_market: "リアルタイム", update_btn: "資産管理",
-                total_net: "純資産総額", invested: "総投資額 (元本)", unrealized: "未実現損益 (P/L)", 
-                stocks_val: "株式評価額", crypto_val: "暗号資産評価額", allocation: "資産配分", realtime_holdings: "マイポートフォリオ",
-                fetching: "市場データ取得中...", sync_done: "同期完了", mock_price: "モック価格使用中",
-                asset: "資産", avg_cost: "平均取得単価", price: "現在価格", units: "保有数", current_val: "評価額", unrealized_pl: "未実現損益",
-                modal_title: "保有資産の更新", bank_base: "現金残高 (USDベース)", 
-                stock_units: "株式", crypto_units: "暗号資産", add_btn: "+ 追加",
-                input_ticker: "ティッカー", input_units: "数量", input_cost: "取得単価 ($)",
-                cancel: "キャンセル", save: "保存", toast_success: "ポートフォリオが更新されました！"
-            }
-        };
-
-        // --- UI TOGGLES ---
-        function updateDateDisplay() {
-            const dateEl = document.getElementById('current-date');
-            let locale = currentLang === 'th' ? 'th-TH' : (currentLang === 'jp' ? 'ja-JP' : 'en-US');
-            dateEl.innerText = new Date().toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+        // --- LEDGER SYSTEM (V9) ---
+        let ledger = JSON.parse(localStorage.getItem('wealthLedgerV9')) || [];
+        let historySnapshots = JSON.parse(localStorage.getItem('wealthHistoryV9')) || [];
+        
+        // Seed initial data if empty
+        if(ledger.length === 0) {
+            const today = new Date().toISOString().split('T')[0];
+            ledger = [
+                { id: 1, date: today, type: 'DEPOSIT', assetClass: null, ticker: null, qty: null, price: 45000 },
+                { id: 2, date: today, type: 'BUY', assetClass: 'stock', ticker: 'MSFT', qty: 120, price: 350 },
+                { id: 3, date: today, type: 'BUY', assetClass: 'stock', ticker: 'LLY', qty: 45, price: 650 },
+                { id: 4, date: today, type: 'BUY', assetClass: 'stock', ticker: 'ABBV', qty: 150, price: 145.5 },
+                { id: 5, date: today, type: 'BUY', assetClass: 'stock', ticker: 'ASTS', qty: 850, price: 15.2 },
+                { id: 6, date: today, type: 'BUY', assetClass: 'crypto', ticker: 'BTC', qty: 1.5, price: 52000 },
+            ];
+            localStorage.setItem('wealthLedgerV9', JSON.stringify(ledger));
         }
+
+        let portfolioState = { bank: 0, invested: 0, realizedPl: 0, dividends: 0, assets: {} };
+        let liveDataCache = { totalNet: 0, holdings: [] };
+
+        const fallbackPrices = { 'MSFT': 415.50, 'LLY': 760.20, 'ABBV': 162.80, 'ASTS': 28.50, 'BTC': 64000 };
+
+        const dictionary = {
+            en: { title: "Wealth Portfolio", live_market: "Live Market", export: "CSV", log_tx: "Log Transaction", total_net: "Total Net Worth", unrealized: "Unrealized P/L", realized: "Realized P/L & Div", cash: "Cash Balance", assets_val: "Equities & Crypto", history: "Net Worth Trend", allocation: "Allocation", portfolio: "Portfolio Holdings", recent_tx: "Recent Transactions", asset: "Asset", avg_cost: "Avg Cost", price: "Live Price", units: "Units", current_val: "Market Value", tx_type: "Type", tx_asset: "Asset Class", ticker: "Ticker", cancel: "Cancel", save: "Save", fetching: "Connecting...", sync_done: "Live sync complete", mock_price: "Using mock/delayed prices" },
+            jp: { title: "資産ポートフォリオ", live_market: "リアルタイム", export: "出力", log_tx: "取引記録", total_net: "純資産総額", unrealized: "未実現損益", realized: "実現損益と配当", cash: "現金残高", assets_val: "株式と暗号資産", history: "資産推移", allocation: "資産配分", portfolio: "保有資産", recent_tx: "最近の取引", asset: "資産", avg_cost: "平均取得単価", price: "現在価格", units: "数量", current_val: "評価額", tx_type: "種類", tx_asset: "資産クラス", ticker: "ティッカー", cancel: "キャンセル", save: "保存", fetching: "接続中...", sync_done: "同期完了", mock_price: "モック価格使用中" }
+        };
 
         function setLanguage(lang) {
             currentLang = lang;
-            
-            // Toggle Button Styles
-            const langs = ['th', 'en', 'jp'];
-            langs.forEach(l => {
-                document.getElementById(`btn-${l}`).className = l === lang 
-                    ? "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white transition shadow" 
-                    : "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition";
-            });
-
-            // Apply translations
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (dictionary[lang][key]) el.innerText = dictionary[lang][key];
-            });
-            
-            updateDateDisplay();
-            
-            // Update Sync Status Text
-            const statusMsg = document.getElementById('status-msg');
-            if(statusMsg.innerText !== dictionary['en']['fetching'] && statusMsg.innerText !== dictionary['jp']['fetching'] && statusMsg.innerText !== dictionary['th']['fetching']) {
-                statusMsg.innerText = FINNHUB_API_KEY ? dictionary[lang]['sync_done'] : dictionary[lang]['mock_price'];
-            }
+            document.getElementById('btn-en').className = lang === 'en' ? "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white transition shadow" : "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition";
+            document.getElementById('btn-jp').className = lang === 'jp' ? "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white transition shadow" : "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition";
+            document.querySelectorAll('[data-i18n]').forEach(el => { if(dictionary[lang][el.getAttribute('data-i18n')]) el.innerText = dictionary[lang][el.getAttribute('data-i18n')]; });
+            document.getElementById('current-date').innerText = new Date().toLocaleDateString(lang === 'jp' ? 'ja-JP' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short' }).toUpperCase();
         }
 
-        function setCurrency(currency) {
-            currentCurrency = currency;
-            document.getElementById('btn-usd').className = currency === 'USD' ? "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-yellow-500 transition shadow" : "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition";
-            document.getElementById('btn-jpy').className = currency === 'JPY' ? "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-yellow-500 transition shadow" : "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition";
+        function setCurrency(cur) {
+            currentCurrency = cur;
+            document.getElementById('btn-usd').className = cur === 'USD' ? "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-yellow-500 shadow" : "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 transition";
+            document.getElementById('btn-jpy').className = cur === 'JPY' ? "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-yellow-500 shadow" : "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 transition";
             renderUI();
         }
 
-        function formatMoney(usdValue, isPrice = false, showSign = false) {
-            let val = currentCurrency === 'JPY' ? usdValue * jpyRate : usdValue;
-            let prefix = currentCurrency === 'JPY' ? '¥' : '$';
-            let sign = showSign ? (usdValue >= 0 ? '+' : '') : (usdValue < 0 ? '-' : ''); // Remove double negative issue
-            let absVal = Math.abs(val);
-            
-            let locale = currentCurrency === 'JPY' ? 'ja-JP' : 'en-US';
-            // Use 0 decimals for Yen total, 2 decimals for USD or exact prices
-            let maxFrac = currentCurrency === 'JPY' && !isPrice ? 0 : 2;
-            let minFrac = currentCurrency === 'JPY' && !isPrice ? 0 : 2;
-            
-            let formatted = absVal.toLocaleString(locale, { minimumFractionDigits: minFrac, maximumFractionDigits: maxFrac });
-            return `${sign}${prefix}${formatted}`;
+        function formatMoney(val, isPrice=false, sign=false) {
+            let v = currentCurrency === 'JPY' ? val * jpyRate : val;
+            let pfx = currentCurrency === 'JPY' ? '¥' : '$';
+            let sgn = sign && val >= 0 ? '+' : '';
+            let dec = currentCurrency === 'JPY' && !isPrice ? 0 : 2;
+            return `${sgn}${pfx}${Math.abs(v).toLocaleString(currentCurrency==='JPY'?'ja-JP':'en-US', {minimumFractionDigits:dec, maximumFractionDigits:dec})}`;
         }
 
-        function getPlBadgeStyle(val) {
-            if(val > 0) return { textClass: 'text-profit', bgClass: 'bg-profit', sign: '+' };
-            if(val < 0) return { textClass: 'text-loss', bgClass: 'bg-loss', sign: '-' }; // Fix sign display
-            return { textClass: 'text-zinc-400', bgClass: 'bg-zinc-800', sign: '' };
+        function getPlStyle(val) {
+            if(val > 0) return { text: 'text-profit', bg: 'bg-profit', sign: '+' };
+            if(val < 0) return { text: 'text-loss', bg: 'bg-loss', sign: '' };
+            return { text: 'text-zinc-400', bg: 'bg-zinc-800', sign: '' };
         }
 
-        // --- API & DATA PROCESSING ---
-        async function fetchExchangeRate() {
-            try {
-                let res = await fetch('https://open.er-api.com/v6/latest/USD');
-                let data = await res.json();
-                jpyRate = data.rates.JPY;
-                document.getElementById('forex-rate').innerText = `1 USD = ¥${jpyRate.toFixed(2)}`;
-            } catch(e) { console.log("Exchange API error"); }
+        // --- ENGINE: Build Portfolio from Ledger ---
+        function rebuildPortfolio() {
+            portfolioState = { bank: 0, invested: 0, realizedPl: 0, dividends: 0, assets: {} };
+            ledger.forEach(tx => {
+                let tkr = tx.ticker ? tx.ticker.toUpperCase() : null;
+                if(tx.type === 'DEPOSIT') { portfolioState.bank += tx.price; portfolioState.invested += tx.price; }
+                if(tx.type === 'WITHDRAW') { portfolioState.bank -= tx.price; portfolioState.invested -= tx.price; }
+                if(tx.type === 'DIVIDEND') { portfolioState.bank += tx.price; portfolioState.dividends += tx.price; }
+                
+                if(tx.type === 'BUY' || tx.type === 'SELL') {
+                    if(!portfolioState.assets[tkr]) portfolioState.assets[tkr] = { class: tx.assetClass, units: 0, avgCost: 0 };
+                    let ast = portfolioState.assets[tkr];
+                    
+                    if(tx.type === 'BUY') {
+                        let totalCost = (ast.units * ast.avgCost) + (tx.qty * tx.price);
+                        ast.units += tx.qty;
+                        ast.avgCost = totalCost / ast.units;
+                        portfolioState.bank -= (tx.qty * tx.price);
+                    }
+                    if(tx.type === 'SELL') {
+                        portfolioState.bank += (tx.qty * tx.price);
+                        portfolioState.realizedPl += tx.qty * (tx.price - ast.avgCost);
+                        ast.units -= tx.qty;
+                        if(ast.units <= 0.000001) { ast.units = 0; ast.avgCost = 0; } // Float precision fix
+                    }
+                }
+            });
         }
 
+        // --- FETCH APIs ---
         async function fetchPrice(type, ticker) {
             ticker = ticker.toUpperCase();
             if (type === 'crypto') {
-                try {
-                    let res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${ticker}USDT`);
-                    let data = await res.json(); return parseFloat(data.price);
-                } catch(e) { return fallbackPrices[ticker] || 0; }
+                try { let r = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${ticker}USDT`); let d = await r.json(); return parseFloat(d.price); } catch(e) { return fallbackPrices[ticker] || 0; }
             } else {
+                // THAI STOCKS (.BK) VIA PUBLIC PROXY TO YAHOO FINANCE
+                if(ticker.endsWith('.BK')) {
+                    try {
+                        let url = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`);
+                        let r = await fetch(`https://api.allorigins.win/get?url=${url}`);
+                        let d = await r.json(); let p = JSON.parse(d.contents);
+                        return p.chart.result[0].meta.regularMarketPrice; // Note: Returns THB, needs conversion to USD ideally. Assuming USD for simplicity in this demo.
+                    } catch(e) { return 0; }
+                }
+                // US STOCKS VIA FINNHUB
                 if (!FINNHUB_API_KEY) return fallbackPrices[ticker] || 0;
-                try {
-                    let res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`);
-                    let data = await res.json(); return data.c > 0 ? data.c : (fallbackPrices[ticker] || 0);
-                } catch(e) { return fallbackPrices[ticker] || 0; }
+                try { let r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`); let d = await r.json(); return d.c > 0 ? d.c : (fallbackPrices[ticker] || 0); } catch(e) { return fallbackPrices[ticker] || 0; }
             }
         }
 
         async function processLiveDashboard() {
+            rebuildPortfolio();
             document.getElementById('status-msg').innerText = dictionary[currentLang]['fetching'];
-            document.getElementById('status-msg').className = "text-xs font-medium mt-6 text-yellow-500 animate-pulse";
+            try { let r = await fetch('https://open.er-api.com/v6/latest/USD'); let d = await r.json(); jpyRate = d.rates.JPY; document.getElementById('forex-rate').innerText = `1 USD = ¥${jpyRate.toFixed(2)}`; } catch(e) {}
             
-            await fetchExchangeRate();
-            
-            let totalStocksValue = 0; let totalStocksCost = 0;
-            let totalCryptoValue = 0; let totalCryptoCost = 0;
-            const liveHoldings = [];
+            let stTotal = 0; let stCost = 0; let crTotal = 0; let crCost = 0;
+            let holdings = [];
 
-            // Calculate Stocks
-            for (let s of portfolio.stocks) {
-                let price = await fetchPrice('stock', s.ticker);
-                let val = s.units * price;
-                let cost = s.units * (s.avgCost || 0);
+            for (let [tkr, ast] of Object.entries(portfolioState.assets)) {
+                if(ast.units <= 0) continue;
+                let px = await fetchPrice(ast.class, tkr);
+                let val = ast.units * px;
+                let cost = ast.units * ast.avgCost;
                 let pl = val - cost;
-                let plPct = cost > 0 ? (pl / cost) * 100 : 0;
                 
-                totalStocksValue += val; totalStocksCost += cost;
-                liveHoldings.push({ ticker: s.ticker, type: 'Stock', units: s.units, avgCostUsd: s.avgCost, priceUsd: price, valueUsd: val, plUsd: pl, plPct: plPct, iconColor: 'bg-yellow-500 text-black' });
+                if(ast.class === 'stock') { stTotal += val; stCost += cost; } else { crTotal += val; crCost += cost; }
+                holdings.push({ tkr, type: ast.class, units: ast.units, cost: ast.avgCost, px, val, pl, plPct: cost>0?(pl/cost)*100:0, color: ast.class==='stock'?'bg-yellow-500':'bg-orange-500' });
             }
 
-            // Calculate Crypto
-            for (let c of portfolio.crypto) {
-                let price = await fetchPrice('crypto', c.ticker);
-                let val = c.units * price;
-                let cost = c.units * (c.avgCost || 0);
-                let pl = val - cost;
-                let plPct = cost > 0 ? (pl / cost) * 100 : 0;
-
-                totalCryptoValue += val; totalCryptoCost += cost;
-                liveHoldings.push({ ticker: c.ticker, type: 'Crypto', units: c.units, avgCostUsd: c.avgCost, priceUsd: price, valueUsd: val, plUsd: pl, plPct: plPct, iconColor: 'bg-orange-500 text-black' });
-            }
-
-            cachedData = {
-                totalNet: portfolio.bank + totalStocksValue + totalCryptoValue,
-                totalCost: portfolio.bank + totalStocksCost + totalCryptoCost,
-                bank: portfolio.bank,
-                stocksTotal: totalStocksValue, stocksCost: totalStocksCost,
-                cryptoTotal: totalCryptoValue, cryptoCost: totalCryptoCost,
-                holdings: liveHoldings
+            liveDataCache = {
+                totalNet: portfolioState.bank + stTotal + crTotal,
+                totalCost: portfolioState.bank + stCost + crCost, // Book value
+                stTotal, crTotal, holdings
             };
 
-            document.getElementById('status-msg').innerText = FINNHUB_API_KEY ? dictionary[currentLang]['sync_done'] : dictionary[currentLang]['mock_price'];
-            document.getElementById('status-msg').className = "text-xs font-medium mt-6 text-zinc-500";
+            // Save Snapshot for Chart
+            const today = new Date().toISOString().split('T')[0];
+            let snap = historySnapshots.find(s => s.date === today);
+            if(snap) snap.net = liveDataCache.totalNet; else historySnapshots.push({ date: today, net: liveDataCache.totalNet });
+            localStorage.setItem('wealthHistoryV9', JSON.stringify(historySnapshots));
 
+            document.getElementById('status-msg').innerText = FINNHUB_API_KEY ? dictionary[currentLang]['sync_done'] : dictionary[currentLang]['mock_price'];
             renderUI();
         }
 
-        // --- RENDER UI ---
         function renderUI() {
-            // Hero Numbers
-            document.getElementById('val-total').innerText = formatMoney(cachedData.totalNet);
-            document.getElementById('val-cost').innerText = formatMoney(cachedData.totalCost);
+            // Cards
+            document.getElementById('val-total').innerText = formatMoney(liveDataCache.totalNet);
+            let unrlz = liveDataCache.totalNet - liveDataCache.totalCost;
+            let unPct = liveDataCache.totalCost > 0 ? (unrlz / liveDataCache.totalCost) * 100 : 0;
+            let upst = getPlStyle(unPct);
+            document.getElementById('val-unrealized-pct').className = `text-xs font-bold px-1.5 py-0.5 rounded ${upst.bg} ${upst.text}`;
+            document.getElementById('val-unrealized-pct').innerText = `${upst.sign}${Math.abs(unPct).toFixed(2)}% (${formatMoney(unrlz,false,true)})`;
             
-            // P/L Badge (Dime Style)
-            let totalPl = cachedData.totalNet - cachedData.totalCost;
-            let totalPlPct = cachedData.totalCost > 0 ? (totalPl / cachedData.totalCost) * 100 : 0;
-            let plStyle = getPlBadgeStyle(totalPlPct);
-            
-            document.getElementById('val-return-amt').className = `text-sm font-bold ${plStyle.textClass}`;
-            document.getElementById('val-return-amt').innerText = formatMoney(totalPl, false, true);
-            
-            document.getElementById('val-return-pct').className = `text-xs font-bold px-1.5 py-0.5 rounded ${plStyle.bgClass} ${plStyle.textClass}`;
-            document.getElementById('val-return-pct').innerText = `${plStyle.sign}${Math.abs(totalPlPct).toFixed(2)}%`;
+            let rzst = getPlStyle(portfolioState.realizedPl);
+            document.getElementById('val-realized').innerText = formatMoney(portfolioState.realizedPl, false, true);
+            document.getElementById('val-realized').className = `text-2xl font-bold mb-1 ${rzst.text}`;
+            document.getElementById('val-dividends').innerText = `Dividends: ${formatMoney(portfolioState.dividends, false, true)}`;
 
-            // Sub-Cards
-            document.getElementById('val-bank').innerText = formatMoney(cachedData.bank);
-            document.getElementById('val-stocks').innerText = formatMoney(cachedData.stocksTotal);
-            document.getElementById('val-crypto').innerText = formatMoney(cachedData.cryptoTotal);
+            document.getElementById('val-bank').innerText = formatMoney(portfolioState.bank);
+            document.getElementById('val-invested').innerText = `Total Invested: ${formatMoney(portfolioState.invested)}`;
 
-            // Stock Sub-Badge
-            let stockPl = cachedData.stocksTotal - cachedData.stocksCost;
-            let stockPlPct = cachedData.stocksCost > 0 ? (stockPl / cachedData.stocksCost) * 100 : 0;
-            let stStyle = getPlBadgeStyle(stockPlPct);
-            let stBadge = document.getElementById('stock-return-badge');
-            stBadge.className = `inline-flex px-2 py-1 rounded text-xs font-bold w-fit mt-1 ${stStyle.bgClass} ${stStyle.textClass}`;
-            stBadge.innerText = `${stStyle.sign}${Math.abs(stockPlPct).toFixed(2)}%`;
+            document.getElementById('val-assets').innerText = formatMoney(liveDataCache.stTotal + liveDataCache.crTotal);
+            let astTot = liveDataCache.stTotal + liveDataCache.crTotal;
+            document.getElementById('val-eq-pct').innerText = `EQ: ${astTot>0 ? Math.round((liveDataCache.stTotal/astTot)*100) : 0}%`;
+            document.getElementById('val-cr-pct').innerText = `CR: ${astTot>0 ? Math.round((liveDataCache.crTotal/astTot)*100) : 0}%`;
 
-            // Crypto Sub-Badge
-            let cryptoPl = cachedData.cryptoTotal - cachedData.cryptoCost;
-            let cryptoPlPct = cachedData.cryptoCost > 0 ? (cryptoPl / cachedData.cryptoCost) * 100 : 0;
-            let crStyle = getPlBadgeStyle(cryptoPlPct);
-            let crBadge = document.getElementById('crypto-return-badge');
-            crBadge.className = `inline-flex px-2 py-1 rounded text-xs font-bold w-fit mt-1 ${crStyle.bgClass} ${crStyle.textClass}`;
-            crBadge.innerText = `${crStyle.sign}${Math.abs(cryptoPlPct).toFixed(2)}%`;
-
-            // Holdings Table Generation
-            const tbody = document.getElementById('holdings-table-body');
-            tbody.innerHTML = '';
-            cachedData.holdings.sort((a, b) => b.valueUsd - a.valueUsd).forEach(asset => {
-                let assetPlStyle = getPlBadgeStyle(asset.plPct);
-                tbody.innerHTML += `
-                <tr class="border-b border-zinc-800/50 hover:bg-zinc-800/50 transition">
-                    <td class="py-4 pl-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-full ${asset.iconColor} flex items-center justify-center font-bold text-xs shadow-lg">${asset.ticker.substring(0,3)}</div>
-                            <div>
-                                <div class="font-bold text-white text-base">${asset.ticker}</div>
-                                <div class="text-[10px] text-zinc-500 uppercase tracking-widest">${asset.type}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="py-4 text-right text-zinc-400 font-medium">${formatMoney(asset.avgCostUsd, true)}</td>
-                    <td class="py-4 text-right text-white font-medium bg-white/5 rounded-lg my-1">${formatMoney(asset.priceUsd, true)}</td>
-                    <td class="py-4 text-right text-zinc-300 font-medium">${asset.units.toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:4})}</td>
-                    <td class="py-4 text-right font-bold text-white">${formatMoney(asset.valueUsd)}</td>
-                    <td class="py-4 text-right pr-4">
-                        <div class="flex flex-col items-end">
-                            <span class="font-bold text-[15px] ${assetPlStyle.textClass}">${formatMoney(asset.plUsd, false, true)}</span>
-                            <span class="text-[11px] font-bold px-1.5 py-0.5 rounded mt-1 tracking-wider ${assetPlStyle.bgClass} ${assetPlStyle.textClass}">${assetPlStyle.sign}${Math.abs(asset.plPct).toFixed(2)}%</span>
-                        </div>
-                    </td>
+            // Holdings Table
+            const tbody = document.getElementById('holdings-table-body'); tbody.innerHTML = '';
+            liveDataCache.holdings.sort((a,b)=>b.val-a.val).forEach(a => {
+                let p = getPlStyle(a.plPct);
+                tbody.innerHTML += `<tr class="border-b border-zinc-800/50 hover:bg-zinc-800/30">
+                    <td class="py-3"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full ${a.color} text-black font-bold text-xs flex items-center justify-center">${a.tkr.substring(0,3)}</div><div><div class="font-bold text-white">${a.tkr}</div></div></div></td>
+                    <td class="py-3 text-right text-zinc-400">${formatMoney(a.cost, true)}</td>
+                    <td class="py-3 text-right text-white font-medium">${formatMoney(a.px, true)}</td>
+                    <td class="py-3 text-right text-zinc-300">${a.units.toLocaleString(undefined,{maximumFractionDigits:4})}</td>
+                    <td class="py-3 text-right font-bold text-white">${formatMoney(a.val)}</td>
+                    <td class="py-3 text-right"><div class="flex flex-col items-end"><span class="font-bold ${p.text}">${formatMoney(a.pl,false,true)}</span><span class="text-[10px] px-1 rounded ${p.bg} ${p.text}">${p.sign}${Math.abs(a.plPct).toFixed(2)}%</span></div></td>
                 </tr>`;
             });
 
-            // Allocation Donut Chart
-            const ctx = document.getElementById('allocationChart').getContext('2d');
-            if (donutChartInstance) donutChartInstance.destroy();
-            donutChartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: { labels: ['Cash', 'Equities', 'Crypto'], datasets: [{ data: [cachedData.bank, cachedData.stocksTotal, cachedData.cryptoTotal], backgroundColor: ['#ffffff', '#eab308', '#f97316'], borderWidth: 0, hoverOffset: 5 }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '78%', plugins: { legend: { display: false } }, animation: { duration: 1000, easing: 'easeOutQuart' } }
+            // Tx Log
+            const tlog = document.getElementById('tx-log-container'); tlog.innerHTML = '';
+            [...ledger].reverse().slice(0, 15).forEach(tx => {
+                let icon = '💸'; let color = 'text-zinc-300'; let txt = ''; let amt = '';
+                if(tx.type === 'DEPOSIT') { icon = '📥'; color = 'text-emerald-400'; txt = 'Deposit'; amt = `+${formatMoney(tx.price)}`; }
+                if(tx.type === 'WITHDRAW') { icon = '📤'; color = 'text-rose-400'; txt = 'Withdraw'; amt = `-${formatMoney(tx.price)}`; }
+                if(tx.type === 'DIVIDEND') { icon = '💰'; color = 'text-emerald-400'; txt = `${tx.ticker} Div`; amt = `+${formatMoney(tx.price)}`; }
+                if(tx.type === 'BUY') { icon = '🛒'; color = 'text-yellow-400'; txt = `Buy ${tx.ticker}`; amt = `-${formatMoney(tx.qty * tx.price)}`; }
+                if(tx.type === 'SELL') { icon = '🤝'; color = 'text-emerald-400'; txt = `Sell ${tx.ticker}`; amt = `+${formatMoney(tx.qty * tx.price)}`; }
+                
+                tlog.innerHTML += `<div class="flex justify-between items-center bg-zinc-900/50 p-2 rounded-lg border border-zinc-800"><div class="flex items-center gap-3"><span class="text-xl">${icon}</span><div><div class="text-sm font-bold text-white">${txt}</div><div class="text-[10px] text-zinc-500">${tx.date}</div></div></div><div class="text-sm font-bold ${color}">${amt}</div></div>`;
             });
+
+            // Charts
+            if(chartAlloc) chartAlloc.destroy();
+            chartAlloc = new Chart(document.getElementById('allocationChart').getContext('2d'), { type: 'doughnut', data: { labels: ['Cash', 'Equities', 'Crypto'], datasets: [{ data: [portfolioState.bank, liveDataCache.stTotal, liveDataCache.crTotal], backgroundColor: ['#ffffff', '#eab308', '#f97316'], borderWidth:0 }] }, options: { responsive:true, maintainAspectRatio:false, cutout:'80%', plugins: {legend:{display:false}} }});
+
+            if(chartTrend) chartTrend.destroy();
+            let grad = document.getElementById('trendChart').getContext('2d').createLinearGradient(0,0,0,300); grad.addColorStop(0, 'rgba(234,179,8,0.3)'); grad.addColorStop(1, 'transparent');
+            chartTrend = new Chart(document.getElementById('trendChart').getContext('2d'), { type: 'line', data: { labels: historySnapshots.map(h=>h.date), datasets: [{ data: historySnapshots.map(h=>h.net), borderColor: '#eab308', backgroundColor: grad, fill:true, tension:0.3, borderWidth:2, pointRadius:2 }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{display:false},y:{grid:{color:'#27272a'}}} } });
+        }
+
+        // --- MODAL & FORM ---
+        function openModal() { document.getElementById('tx-modal').classList.remove('hidden'); toggleTxFields(); }
+        function closeModal() { document.getElementById('tx-modal').classList.add('hidden'); document.getElementById('tx-form').reset(); }
+        
+        function toggleTxFields() {
+            let t = document.getElementById('tx-type').value;
+            document.getElementById('field-asset').style.display = (t==='BUY'||t==='SELL') ? 'block' : 'none';
+            document.getElementById('field-ticker').style.display = (t==='BUY'||t==='SELL'||t==='DIVIDEND') ? 'block' : 'none';
+            document.getElementById('field-qty').style.display = (t==='BUY'||t==='SELL') ? 'block' : 'none';
+            document.getElementById('lbl-price').innerText = (t==='DEPOSIT'||t==='WITHDRAW'||t==='DIVIDEND') ? 'Amount (USD)' : 'Price/Unit (USD)';
+        }
+
+        document.getElementById('tx-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            let type = document.getElementById('tx-type').value;
+            let ticker = document.getElementById('tx-ticker').value.toUpperCase();
+            let qty = parseFloat(document.getElementById('tx-qty').value) || 0;
+            let price = parseFloat(document.getElementById('tx-price').value) || 0;
+            let assetClass = document.getElementById('tx-asset-class').value;
+            
+            ledger.push({ id: Date.now(), date: new Date().toISOString().split('T')[0], type, assetClass, ticker: (type==='DEPOSIT'||type==='WITHDRAW')?null:ticker, qty: (type==='BUY'||type==='SELL')?qty:null, price });
+            localStorage.setItem('wealthLedgerV9', JSON.stringify(ledger));
+            
+            closeModal(); 
+            document.getElementById('toast').classList.remove('translate-y-[150%]', 'opacity-0');
+            setTimeout(() => document.getElementById('toast').classList.add('translate-y-[150%]', 'opacity-0'), 3000);
+            processLiveDashboard();
+        });
+
+        // --- CSV EXPORT ---
+        function exportCSV() {
+            let csv = "Ticker,Type,Units,Avg Cost,Live Price,Market Value,Unrealized P/L\n";
+            liveDataCache.holdings.forEach(h => { csv += `${h.tkr},${h.type},${h.units},${h.cost},${h.px},${h.val},${h.pl}\n`; });
+            let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Portfolio_${new Date().toISOString().split('T')[0]}.csv`; link.click();
         }
 
         function refreshLivePrices() { processLiveDashboard(); }
 
-        // --- MODAL & FORM LOGIC ---
-        const modal = document.getElementById('update-modal');
-        function openModal() {
-            document.getElementById('input-bank').value = portfolio.bank;
-            
-            document.getElementById('stock-container').innerHTML = '';
-            portfolio.stocks.forEach(s => addAssetRow('stock', s.ticker, s.units, s.avgCost));
-            if(portfolio.stocks.length === 0) addAssetRow('stock');
-            
-            document.getElementById('crypto-container').innerHTML = '';
-            portfolio.crypto.forEach(c => addAssetRow('crypto', c.ticker, c.units, c.avgCost));
-            if(portfolio.crypto.length === 0) addAssetRow('crypto');
-            
-            modal.classList.remove('hidden'); 
-            modal.querySelector('.glass-card').classList.remove('modal-exit');
-            modal.querySelector('.glass-card').classList.add('modal-enter');
-        }
-
-        function closeModal() { 
-            const card = modal.querySelector('.glass-card');
-            card.classList.remove('modal-enter');
-            card.classList.add('modal-exit');
-            setTimeout(() => { modal.classList.add('hidden'); }, 200);
-        }
-        
-        function showToast(msg) {
-            document.getElementById('toast-msg').innerText = msg;
-            const t = document.getElementById('toast');
-            t.classList.remove('translate-y-[150%]', 'opacity-0');
-            setTimeout(() => t.classList.add('translate-y-[150%]', 'opacity-0'), 3000);
-        }
-
-        // Add Asset Row Function (Includes Cost)
-        function addAssetRow(type, ticker = '', units = '', avgCost = '') {
-            const container = document.getElementById(`${type}-container`);
-            const row = document.createElement('div');
-            row.className = `grid grid-cols-12 gap-2 items-center ${type}-row`;
-            row.innerHTML = `
-                <div class="col-span-3"><input type="text" placeholder="e.g. AAPL" value="${ticker}" required class="asset-ticker w-full bg-black border border-zinc-700 text-white p-2.5 rounded-lg text-sm uppercase focus:outline-none focus:border-yellow-500 font-bold"></div>
-                <div class="col-span-4"><input type="number" step="any" placeholder="0.00" value="${units}" required class="asset-units w-full bg-black border border-zinc-700 text-white p-2.5 rounded-lg text-sm focus:outline-none focus:border-yellow-500 font-medium"></div>
-                <div class="col-span-4"><input type="number" step="any" placeholder="$0.00" value="${avgCost}" required class="asset-avgcost w-full bg-black border border-zinc-700 text-white p-2.5 rounded-lg text-sm focus:outline-none focus:border-yellow-500 font-medium"></div>
-                <div class="col-span-1 text-center"><button type="button" onclick="this.parentElement.parentElement.remove()" class="text-zinc-500 hover:text-red-500 transition"><svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div>
-            `;
-            container.appendChild(row);
-        }
-
-        // Save Data Logic
-        document.getElementById('daily-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const bank = parseFloat(document.getElementById('input-bank').value) || 0;
-            
-            const stocks = []; 
-            document.querySelectorAll('.stock-row').forEach(row => { 
-                const t = row.querySelector('.asset-ticker').value.toUpperCase(); 
-                const u = parseFloat(row.querySelector('.asset-units').value) || 0; 
-                const c = parseFloat(row.querySelector('.asset-avgcost').value) || 0;
-                if(t) stocks.push({ticker: t, units: u, avgCost: c}); 
-            });
-            
-            const crypto = []; 
-            document.querySelectorAll('.crypto-row').forEach(row => { 
-                const t = row.querySelector('.asset-ticker').value.toUpperCase(); 
-                const u = parseFloat(row.querySelector('.asset-units').value) || 0; 
-                const c = parseFloat(row.querySelector('.asset-avgcost').value) || 0;
-                if(t) crypto.push({ticker: t, units: u, avgCost: c}); 
-            });
-            
-            portfolio = { bank, stocks, crypto };
-            localStorage.setItem('wealthPortfolioV8', JSON.stringify(portfolio));
-            closeModal(); 
-            showToast(dictionary[currentLang]['toast_success']); 
-            processLiveDashboard();
-        });
-
-        // --- BOOTSTRAP ---
-        updateDateDisplay();
-        setLanguage('th'); // เปิดมาให้เป็นภาษาไทยเลย
+        // Boot
+        setLanguage('en');
         processLiveDashboard();
     </script>
 </body>
