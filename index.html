@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Investor Dashboard V6 (Editable Modal & Read-Only Summary)</title>
+    <title>Ultimate Investor Dashboard V8 (Final Edition)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -18,7 +18,11 @@
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
         .text-profit { color: #34d399; } .bg-profit { background-color: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); }
         .text-loss { color: #fb7185; } .bg-loss { background-color: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); }
-        input[type="date"] { color-scheme: dark; }
+        
+        /* Force English Calendar Format */
+        input[type="date"] { color-scheme: dark; font-family: 'Montserrat', sans-serif; }
+        input[type="date"]::-webkit-datetime-edit-fields-wrapper { display: flex; }
+        
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 6px; }
@@ -36,6 +40,7 @@
                     <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full live-dot"></span>Market Live
                 </span>
             </div>
+            <!-- REAL-TIME CLOCK -->
             <div id="current-date" class="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Loading Time...</div>
         </div>
         
@@ -63,9 +68,14 @@
             <div class="text-[10px] text-zinc-500 mt-4 uppercase">Realized P/L: <span id="val-realized" class="font-bold">$0.00</span></div>
         </div>
 
-        <div class="glass-card rounded-3xl p-8">
-            <h3 class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2">Allocation</h3>
-            <div class="relative h-20 w-full"><canvas id="allocationChart"></canvas></div>
+        <div class="glass-card rounded-3xl p-8 interactive-card group" onclick="openAllAssetsHistory()">
+            <h3 class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2 flex justify-between">Equities & Crypto <span class="text-yellow-500">→</span></h3>
+            <div class="text-3xl font-bold text-white" id="val-assets">$0.00</div>
+            <div class="flex gap-2 mt-4 text-[10px] font-bold uppercase">
+                <span class="text-yellow-500" id="val-eq-pct">EQ: 0%</span>
+                <span class="text-zinc-600">|</span>
+                <span class="text-orange-500" id="val-cr-pct">CR: 0%</span>
+            </div>
         </div>
 
         <div class="glass-card rounded-3xl p-8 border-l-4 border-l-emerald-500">
@@ -98,9 +108,15 @@
     </div>
 
     <!-- CHARTS SECTION -->
-    <div class="glass-card rounded-3xl p-8 mb-10">
-        <h3 class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-6">Net Worth Trend</h3>
-        <div class="h-64 w-full"><canvas id="trendChart"></canvas></div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+        <div class="glass-card rounded-3xl p-8 lg:col-span-2">
+            <h3 class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-6">Net Worth Trend</h3>
+            <div class="h-64 w-full"><canvas id="trendChart"></canvas></div>
+        </div>
+        <div class="glass-card rounded-3xl p-8">
+            <h3 class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-6">Allocation</h3>
+            <div class="relative h-64 w-full"><canvas id="allocationChart"></canvas></div>
+        </div>
     </div>
 
     <!-- RECENT TRANSACTIONS (READ-ONLY SUMMARY) -->
@@ -138,8 +154,10 @@
         <div class="glass-card w-full max-w-md rounded-3xl p-8 border border-zinc-700">
             <h3 class="text-xl font-bold text-white mb-6" id="tx-modal-title">Log Transaction</h3>
             <form id="tx-form" class="space-y-4">
-                <input type="date" id="tx-date" required class="w-full bg-zinc-900 border border-zinc-800 text-white p-4 rounded-xl focus:outline-none focus:border-yellow-500">
-                <select id="tx-type" onchange="toggleTxFields()" class="w-full bg-zinc-900 border border-zinc-800 text-white p-4 rounded-xl">
+                <!-- BIND DATE PICKER TO ENGLISH LOCALE -->
+                <input type="date" id="tx-date" lang="en-US" required class="w-full bg-zinc-900 border border-zinc-800 text-white p-4 rounded-xl focus:outline-none focus:border-yellow-500 font-medium">
+                
+                <select id="tx-type" onchange="toggleTxFields()" class="w-full bg-zinc-900 border border-zinc-800 text-white p-4 rounded-xl font-medium">
                     <option value="DEPOSIT">Deposit Cash</option>
                     <option value="BUY">Buy Asset</option>
                     <option value="SELL">Sell Asset</option>
@@ -147,23 +165,23 @@
                     <option value="WITHDRAW">Withdraw Cash</option>
                 </select>
                 <div id="field-asset" class="hidden space-y-4">
-                    <select id="tx-asset-class" onchange="populateTickers()" class="w-full bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-white">
+                    <select id="tx-asset-class" onchange="populateTickers()" class="w-full bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-white font-medium">
                         <option value="stock_us">US Stocks</option>
                         <option value="stock_jp">Japan Stocks (.T)</option>
                         <option value="crypto">Crypto (vs USDT)</option>
                     </select>
                     <div class="flex gap-2">
-                        <select id="tx-ticker-select" onchange="handleTickerSelect()" class="flex-1 bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-white"></select>
-                        <input type="text" id="tx-ticker-custom" class="flex-1 bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-white uppercase hidden" placeholder="Ticker">
+                        <select id="tx-ticker-select" onchange="handleTickerSelect()" class="flex-1 bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-white font-medium"></select>
+                        <input type="text" id="tx-ticker-custom" class="flex-1 bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-white uppercase font-medium hidden" placeholder="Ticker">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div id="field-qty" class="hidden"><label class="text-[10px] text-zinc-500 font-bold ml-1">Units</label><input type="number" step="any" id="tx-qty" class="w-full bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-white" placeholder="0"></div>
-                    <div id="field-price"><label class="text-[10px] text-zinc-500 font-bold ml-1" id="lbl-price">Price (USD)</label><input type="number" step="any" id="tx-price" required class="w-full bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-white" placeholder="0.00"></div>
+                    <div id="field-qty" class="hidden"><label class="text-[10px] text-zinc-500 font-bold ml-1">Units</label><input type="number" step="any" id="tx-qty" class="w-full bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-white font-medium" placeholder="0"></div>
+                    <div id="field-price"><label class="text-[10px] text-zinc-500 font-bold ml-1" id="lbl-price">Price (USD)</label><input type="number" step="any" id="tx-price" required class="w-full bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-white font-medium" placeholder="0.00"></div>
                 </div>
                 <div class="flex gap-3 pt-4">
-                    <button type="button" onclick="closeModal()" class="flex-1 p-4 rounded-xl font-bold text-zinc-500">Cancel</button>
-                    <button type="submit" class="flex-1 p-4 bg-yellow-500 text-black font-bold rounded-xl">Save</button>
+                    <button type="button" onclick="closeModal()" class="flex-1 p-4 rounded-xl font-bold text-zinc-500 hover:bg-zinc-900 transition">Cancel</button>
+                    <button type="submit" class="flex-1 p-4 bg-yellow-500 text-black font-bold rounded-xl shadow-[0_0_15px_rgba(234,179,8,0.2)] hover:bg-yellow-400 transition">Save</button>
                 </div>
             </form>
         </div>
@@ -176,8 +194,8 @@
             <label class="text-[10px] text-zinc-500 font-bold ml-1">FinnHub API Key (For US Stocks)</label>
             <input type="text" id="setting-api-key" class="w-full bg-zinc-900 border border-zinc-800 text-white p-4 rounded-xl mb-6 mt-1" placeholder="FinnHub API Key">
             <div class="flex gap-2 mb-6">
-                <button onclick="exportJSON()" class="flex-1 p-3 bg-zinc-800 rounded-xl text-xs font-bold text-emerald-400">Export Backup</button>
-                <button onclick="document.getElementById('import-file').click()" class="flex-1 p-3 bg-zinc-800 rounded-xl text-xs font-bold text-yellow-500">Import Backup</button>
+                <button onclick="exportJSON()" class="flex-1 p-3 bg-zinc-800 rounded-xl text-xs font-bold text-emerald-400 hover:bg-zinc-700 transition">Export Backup</button>
+                <button onclick="document.getElementById('import-file').click()" class="flex-1 p-3 bg-zinc-800 rounded-xl text-xs font-bold text-yellow-500 hover:bg-zinc-700 transition">Import Backup</button>
                 <input type="file" id="import-file" class="hidden" onchange="importJSON(event)">
             </div>
             <button onclick="saveSettings()" class="w-full p-4 bg-yellow-500 text-black font-bold rounded-xl">Save & Close</button>
@@ -185,12 +203,29 @@
     </div>
 
     <script>
+        // --- REAL-TIME CLOCK ---
+        function updateClock() {
+            const now = new Date();
+            const options = { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+            document.getElementById('current-date').innerText = now.toLocaleString('en-US', options).toUpperCase();
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        function getLocalDateString() {
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`; // Always YYYY-MM-DD
+        }
+
         // --- STATE & CONFIG ---
-        let editingTxId = null; // Track if we are editing an existing TX
+        let editingTxId = null;
         let ledger = JSON.parse(localStorage.getItem('wealthLedgerV12')) || [];
         let historySnapshots = JSON.parse(localStorage.getItem('wealthHistoryV12')) || [];
         
-        // FinnHub API Key
+        // Embedded FinnHub API Key
         const USER_PROVIDED_KEY = 'd7ub5jpr01qnv95muqpgd7ub5jpr01qnv95muqq0';
         let finnhubApiKey = localStorage.getItem('wealthApiKey') || USER_PROVIDED_KEY;
         
@@ -232,7 +267,7 @@
                     let r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${finnhubApiKey}`);
                     let d = await r.json(); return d.c || 0;
                 }
-                return (100 + Math.random() * 50); // Fallback
+                return (100 + Math.random() * 50); // Fallback mock
             } catch(e) { return 0; }
         }
 
@@ -271,7 +306,7 @@
 
             liveDataCache = { bank, realized, holdings, totalNet: bank + holdings.reduce((s,h)=>s+h.val, 0), totalCost: bank + holdings.reduce((s,h)=>s+(h.units*h.cost), 0) };
             
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString();
             if(!historySnapshots.find(s=>s.date===today)) historySnapshots.push({date:today, net: liveDataCache.totalNet});
             else historySnapshots.find(s=>s.date===today).net = liveDataCache.totalNet;
             localStorage.setItem('wealthHistoryV12', JSON.stringify(historySnapshots.slice(-30)));
@@ -281,7 +316,6 @@
         }
 
         function renderUI() {
-            document.getElementById('current-date').innerText = new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + " JST";
             document.getElementById('val-total').innerText = formatMoney(liveDataCache.totalNet);
             document.getElementById('val-bank').innerText = formatMoney(liveDataCache.bank);
             document.getElementById('val-realized').innerText = formatMoney(liveDataCache.realized, false);
@@ -291,7 +325,15 @@
             document.getElementById('val-unrealized-pct').innerText = `${unPl >= 0 ? '+' : ''}${unPct.toFixed(2)}% (${formatMoney(unPl)})`;
             document.getElementById('val-unrealized-pct').className = `inline-block mt-4 text-[10px] font-bold px-2 py-1 rounded bg-zinc-900 ${unPl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
 
-            // TABLE RENDERING
+            // ASSETS TOTAL CARD
+            let eqTotal = liveDataCache.holdings.filter(h=>h.class!=='crypto').reduce((s,h)=>s+h.val,0);
+            let crTotal = liveDataCache.holdings.filter(h=>h.class==='crypto').reduce((s,h)=>s+h.val,0);
+            let astTot = eqTotal + crTotal;
+            document.getElementById('val-assets').innerText = formatMoney(astTot);
+            document.getElementById('val-eq-pct').innerText = `EQ: ${astTot>0 ? Math.round((eqTotal/astTot)*100) : 0}%`;
+            document.getElementById('val-cr-pct').innerText = `CR: ${astTot>0 ? Math.round((crTotal/astTot)*100) : 0}%`;
+
+            // TABLE RENDERING (Restored & Elegant)
             const tbody = document.getElementById('holdings-table-body');
             tbody.innerHTML = '';
             if(liveDataCache.holdings.length === 0) {
@@ -309,7 +351,7 @@
                         </td>
                         <td class="py-4 text-right text-zinc-400 font-medium">${formatMoney(h.cost, true)}</td>
                         <td class="py-4 text-right text-white font-bold">${formatMoney(h.px, true)}</td>
-                        <td class="py-4 text-right text-zinc-300 font-medium">${h.units.toLocaleString(undefined,{maximumFractionDigits:4})}</td>
+                        <td class="py-4 text-right text-zinc-300 font-medium">${h.units.toLocaleString('en-US',{maximumFractionDigits:4})}</td>
                         <td class="py-4 text-right font-black text-white">${formatMoney(h.val)}</td>
                         <td class="py-4 text-right pr-2 rounded-r-xl">
                             <div class="flex flex-col items-end">
@@ -324,7 +366,7 @@
             // RECENT TRANSACTIONS (Read-Only)
             const recentList = document.getElementById('recent-tx-list');
             recentList.innerHTML = '';
-            let recentTxs = [...ledger].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0, 15); // Show last 15
+            let recentTxs = [...ledger].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0, 15);
             
             if(recentTxs.length === 0) {
                 recentList.innerHTML = `<div class="text-zinc-500 text-sm py-4">No recent transactions.</div>`;
@@ -361,6 +403,38 @@
         }
 
         // --- EVENTS ---
+
+        function openAllAssetsHistory() {
+            const txs = ledger.filter(t => ['BUY','SELL'].includes(t.type) || (t.type==='DIVIDEND' && t.ticker)).sort((a,b)=>new Date(b.date)-new Date(a.date));
+            document.getElementById('history-icon').className = `w-14 h-14 rounded-2xl bg-yellow-500 flex items-center justify-center text-black font-black text-xl`;
+            document.getElementById('history-icon').innerText = '📈';
+            document.getElementById('history-title').innerText = 'Investment History';
+            document.getElementById('history-subtitle').innerText = 'Viewing all trades & dividends';
+            document.getElementById('asset-perf-box').innerHTML = '';
+
+            const list = document.getElementById('history-list'); list.innerHTML = '';
+            txs.forEach(tx => {
+                let isNegative = tx.type === 'BUY';
+                let color = isNegative ? 'text-rose-500' : 'text-emerald-500';
+                let sign = isNegative ? '-' : '+';
+                list.innerHTML += `
+                <div class="flex justify-between items-center bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800">
+                    <div>
+                        <div class="text-sm font-bold text-white">${tx.type} ${tx.ticker} ${tx.qty ? '('+tx.qty+' Units)' : ''}</div>
+                        <div class="text-[10px] text-zinc-500 font-bold">${tx.date}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-bold ${color}">${sign}${formatMoney(tx.price * (tx.qty || 1))}</div>
+                        <div class="mt-1 flex gap-3 justify-end">
+                            <button onclick="openModal(${tx.id})" class="text-[10px] text-yellow-500 font-bold uppercase hover:text-yellow-400">Edit</button>
+                            <button onclick="deleteTx(${tx.id})" class="text-[10px] text-rose-500 font-bold uppercase hover:text-rose-400">Delete</button>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('history-modal').classList.remove('hidden');
+        }
+
         function openAssetHistory(tkr, colorClass) {
             const txs = ledger.filter(t => t.ticker === tkr).sort((a,b)=>new Date(b.date)-new Date(a.date));
             const h = liveDataCache.holdings.find(i=>i.tkr === tkr);
@@ -457,7 +531,7 @@
                 document.getElementById('tx-price').value = tx.price;
             } else {
                 document.getElementById('tx-form').reset();
-                document.getElementById('tx-date').value = new Date().toISOString().split('T')[0];
+                document.getElementById('tx-date').value = getLocalDateString();
                 document.getElementById('tx-type').value = 'DEPOSIT';
                 toggleTxFields();
             }
@@ -510,7 +584,7 @@
 
             localStorage.setItem('wealthLedgerV12', JSON.stringify(ledger));
             closeModal(); 
-            closeHistoryModal(); // ปิด Modal ประวัติไปเลยเพื่อความชัวร์ จะได้เปิดมาดูใหม่แบบอัปเดตแล้ว
+            closeHistoryModal(); 
             refreshDashboard();
         });
 
@@ -526,7 +600,7 @@
         function setCurrency(cur) { currentCurrency = cur; document.getElementById('btn-usd').className = cur==='USD' ? 'px-4 py-2 rounded-lg text-xs font-bold bg-zinc-800 text-yellow-500 shadow' : 'px-4 py-2 rounded-lg text-xs font-bold text-zinc-500 transition hover:text-zinc-300'; document.getElementById('btn-jpy').className = cur==='JPY' ? 'px-4 py-2 rounded-lg text-xs font-bold bg-zinc-800 text-yellow-500 shadow' : 'px-4 py-2 rounded-lg text-xs font-bold text-zinc-500 transition hover:text-zinc-300'; renderUI(); }
         
         function saveSettings() { finnhubApiKey = document.getElementById('setting-api-key').value; localStorage.setItem('wealthApiKey', finnhubApiKey); closeSettingsModal(); refreshDashboard(); }
-        function exportJSON() { let b = new Blob([JSON.stringify({ledger: ledger, history: historySnapshots})], {type:'application/json'}); let a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `WealthBackup_${new Date().toISOString().split('T')[0]}.json`; a.click(); }
+        function exportJSON() { let b = new Blob([JSON.stringify({ledger: ledger, history: historySnapshots})], {type:'application/json'}); let a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `WealthBackup_${getLocalDateString()}.json`; a.click(); }
         function importJSON(e) { 
             let f = e.target.files[0]; let r = new FileReader(); 
             r.onload = x => { 
