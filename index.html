@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Investor Dashboard</title>
+    <title>Ultimate Investor Dashboard V2</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
@@ -11,17 +11,16 @@
     <!-- Premium Font: Montserrat -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        :root { color-scheme: dark; } /* Force dark scheme for date picker */
         body { font-family: 'Montserrat', sans-serif; background-color: #000000; color: #f4f4f5; }
         .glass-card { background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5); }
+        .interactive-card { transition: all 0.2s ease-in-out; cursor: pointer; }
+        .interactive-card:hover { transform: translateY(-3px); border-color: rgba(234, 179, 8, 0.5); box-shadow: 0 10px 40px -10px rgba(234, 179, 8, 0.2); }
         .gradient-text { background: linear-gradient(to right, #fbbf24, #fef08a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
-        
-        .modal-enter { animation: slideUp 0.3s ease-out forwards; }
-        .modal-exit { animation: slideDown 0.2s ease-in forwards; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        @keyframes slideDown { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(20px) scale(0.95); } }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 6px; }
+        ::-webkit-scrollbar-thumb:hover { background: #52525b; }
         
         .live-dot { animation: pulse 2s infinite; }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
@@ -29,8 +28,9 @@
         .text-profit { color: #34d399; } .bg-profit { background-color: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); }
         .text-loss { color: #fb7185; } .bg-loss { background-color: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); }
 
-        /* Fix Date Picker visibility in dark mode */
-        input[type="date"] { color-scheme: dark; }
+        /* Force English format in Date Picker */
+        input[type="date"]::-webkit-datetime-edit { padding: 1em; }
+        input[type="date"]::-webkit-datetime-edit-fields-wrapper { display: flex; flex-direction: row; }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-6 lg:p-8 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-zinc-900 via-black to-black">
@@ -44,7 +44,6 @@
                     <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full live-dot"></span><span data-i18n="live_market">Live Market</span>
                 </span>
             </div>
-            <!-- DATE DISPLAY (JAPAN TIMEZONE) -->
             <div class="flex items-center gap-2 text-zinc-300 bg-zinc-900/80 w-fit px-4 py-2 rounded-lg border border-zinc-700 shadow-md">
                 <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 <span class="text-sm font-bold tracking-wide" id="current-date">Loading Tokyo Time...</span>
@@ -61,10 +60,10 @@
                 <button onclick="setLanguage('en')" id="btn-en" class="px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white transition shadow">EN</button>
                 <button onclick="setLanguage('jp')" id="btn-jp" class="px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition">JP</button>
             </div>
-            
-            <button onclick="exportCSV()" class="glass-card px-4 py-2.5 rounded-lg text-sm font-bold text-zinc-300 hover:bg-zinc-800 transition shadow-lg flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                <span data-i18n="export">CSV</span>
+
+            <!-- SETTINGS BTN -->
+            <button onclick="openSettingsModal()" class="glass-card p-2.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition shadow-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             </button>
             
             <button onclick="refreshLivePrices()" class="glass-card px-4 py-2.5 rounded-lg hover:bg-zinc-800 transition text-emerald-400">
@@ -95,10 +94,15 @@
             <div class="text-xs text-emerald-400 font-medium mt-3" id="val-dividends">Dividends: $0.00</div>
         </div>
 
-        <div class="glass-card rounded-2xl p-6">
-            <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-2" data-i18n="cash">Cash Balance</h3>
+        <!-- CLICKABLE CASH CARD -->
+        <div class="glass-card rounded-2xl p-6 interactive-card group" onclick="openCashHistory()">
+            <div class="flex justify-between items-start">
+                <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-2" data-i18n="cash">Cash Balance</h3>
+                <svg class="w-4 h-4 text-zinc-600 group-hover:text-yellow-500 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </div>
             <div class="text-2xl font-bold text-white mb-1" id="val-bank">$0.00</div>
             <div class="text-xs text-zinc-500 font-medium mt-3" id="val-invested">Total Invested: $0.00</div>
+            <div class="text-[10px] text-yellow-500/70 mt-2 opacity-0 group-hover:opacity-100 transition" data-i18n="click_details">Click to view cash history</div>
         </div>
 
         <div class="glass-card rounded-2xl p-6">
@@ -130,54 +134,47 @@
         </div>
     </div>
 
-    <!-- HOLDINGS & LOG -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
-        <div class="glass-card rounded-2xl p-6 overflow-x-auto lg:col-span-2">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-white" data-i18n="portfolio">Portfolio Holdings</h3>
-                <span id="forex-rate" class="text-xs text-zinc-500 bg-black/50 px-2 py-1 rounded"></span>
-            </div>
-            <table class="w-full text-left text-sm border-collapse whitespace-nowrap">
-                <thead>
-                    <tr class="text-zinc-500 text-xs uppercase border-b border-zinc-800">
-                        <th class="pb-3 font-semibold" data-i18n="asset">Asset</th>
-                        <th class="pb-3 font-semibold text-right" data-i18n="avg_cost">Avg Cost</th>
-                        <th class="pb-3 font-semibold text-right" data-i18n="price">Live Price</th>
-                        <th class="pb-3 font-semibold text-right" data-i18n="units">Units</th>
-                        <th class="pb-3 font-semibold text-right" data-i18n="current_val">Market Value</th>
-                        <th class="pb-3 font-semibold text-right" data-i18n="unrealized">Unrealized P/L</th>
-                    </tr>
-                </thead>
-                <tbody id="holdings-table-body">
-                    <tr><td colspan="6" class="py-8 text-center text-zinc-600 text-sm" data-i18n="empty_portfolio">Portfolio is empty. Log a transaction to start.</td></tr>
-                </tbody>
-            </table>
+    <!-- HOLDINGS (FULL WIDTH & CLICKABLE) -->
+    <div class="glass-card rounded-2xl p-6 overflow-x-auto mb-12">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold text-white" data-i18n="portfolio">Portfolio Holdings <span class="text-xs font-normal text-zinc-400 ml-2" data-i18n="click_asset_hint">(Click any asset to view transaction history)</span></h3>
+            <span id="forex-rate" class="text-xs text-zinc-500 bg-black/50 px-2 py-1 rounded"></span>
         </div>
-        
-        <div class="glass-card rounded-2xl p-6">
-            <h3 class="text-lg font-bold text-white mb-4" data-i18n="recent_tx">Recent Transactions</h3>
-            <div id="tx-log-container" class="space-y-3 overflow-y-auto max-h-[300px] custom-scrollbar pr-2">
-                <div class="text-center text-zinc-600 text-sm py-4" data-i18n="no_data">No data yet</div>
-            </div>
-        </div>
+        <table class="w-full text-left text-sm border-collapse whitespace-nowrap">
+            <thead>
+                <tr class="text-zinc-500 text-xs uppercase border-b border-zinc-800">
+                    <th class="pb-3 font-semibold pl-2" data-i18n="asset">Asset</th>
+                    <th class="pb-3 font-semibold text-right" data-i18n="avg_cost">Avg Cost</th>
+                    <th class="pb-3 font-semibold text-right" data-i18n="price">Live Price</th>
+                    <th class="pb-3 font-semibold text-right" data-i18n="units">Units</th>
+                    <th class="pb-3 font-semibold text-right" data-i18n="current_val">Market Value</th>
+                    <th class="pb-3 font-semibold text-right pr-2" data-i18n="unrealized">Unrealized P/L</th>
+                </tr>
+            </thead>
+            <tbody id="holdings-table-body">
+                <tr><td colspan="6" class="py-8 text-center text-zinc-600 text-sm" data-i18n="empty_portfolio">Portfolio is empty. Log a transaction to start.</td></tr>
+            </tbody>
+        </table>
     </div>
 
-    <!-- TRANSACTION MODAL -->
+    <!-- ================= MODALS ================= -->
+
+    <!-- TRANSACTION MODAL (ADD / EDIT) -->
     <div id="tx-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex justify-center items-center p-4">
         <div class="glass-card w-full max-w-md rounded-2xl flex flex-col shadow-2xl border border-zinc-700/50">
             <div class="p-5 border-b border-zinc-800/50 flex justify-between items-center bg-black/40 rounded-t-2xl">
-                <h3 class="text-lg font-bold text-white" data-i18n="log_tx">Log Transaction</h3>
+                <h3 class="text-lg font-bold text-white" id="tx-modal-title" data-i18n="log_tx">Log Transaction</h3>
                 <button onclick="closeModal()" class="text-zinc-500 hover:text-white transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             
             <form id="tx-form" class="p-6">
-                <!-- DATE PICKER (FIXED & HIGHLY VISIBLE) -->
+                <!-- DATE PICKER (English Enforced) -->
                 <div class="mb-5 bg-zinc-900/50 p-3 rounded-xl border border-zinc-700/80 shadow-inner">
                     <label class="block text-xs font-extrabold text-yellow-500 uppercase tracking-wider mb-2 flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         <span data-i18n="tx_date">Transaction Date</span>
                     </label>
-                    <input type="date" id="tx-date" required class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 font-bold tracking-widest text-lg">
+                    <input type="date" lang="en-US" id="tx-date" required class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 font-bold tracking-widest text-lg">
                 </div>
 
                 <div class="mb-4">
@@ -195,18 +192,15 @@
                     <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="tx_asset">Market</label>
                     <select id="tx-asset-class" onchange="populateTickers()" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500">
                         <option value="stock_us">US Stocks</option>
-                        <option value="stock_jp">Japan Stocks (TSE)</option>
+                        <option value="stock_jp">Japan Stocks</option>
                         <option value="crypto">Crypto</option>
                     </select>
                 </div>
 
-                <!-- SMART DROPDOWN FOR TICKER -->
                 <div id="field-ticker" class="mb-4 hidden">
                     <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="ticker">Asset Ticker</label>
-                    <select id="tx-ticker-select" onchange="handleTickerSelect()" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 mb-2">
-                        <!-- Populated by JS -->
-                    </select>
-                    <input type="text" id="tx-ticker-custom" class="w-full bg-zinc-900 border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 uppercase hidden" placeholder="Enter custom ticker (e.g. TSLA)">
+                    <select id="tx-ticker-select" onchange="handleTickerSelect()" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 mb-2"></select>
+                    <input type="text" id="tx-ticker-custom" class="w-full bg-zinc-900 border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 uppercase hidden" placeholder="e.g. TSLA">
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 mb-6">
@@ -228,17 +222,78 @@
         </div>
     </div>
 
+    <!-- SPECIFIC HISTORY MODAL (For clicking Assets or Cash) -->
+    <div id="history-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex justify-center items-center p-4">
+        <div class="glass-card w-full max-w-2xl rounded-2xl flex flex-col shadow-2xl border border-zinc-700/50 max-h-[85vh]">
+            <div class="p-5 border-b border-zinc-800/50 flex justify-between items-center bg-black/40 rounded-t-2xl">
+                <div class="flex items-center gap-3">
+                    <div id="history-icon" class="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center text-black font-bold text-lg"></div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white" id="history-title">History</h3>
+                        <p class="text-xs text-zinc-400" id="history-subtitle">Viewing details</p>
+                    </div>
+                </div>
+                <button onclick="closeHistoryModal()" class="text-zinc-500 hover:text-white transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto custom-scrollbar">
+                <div id="history-list" class="space-y-3">
+                    <!-- Dynamic Data -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS / BACKUP MODAL -->
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex justify-center items-center p-4">
+        <div class="glass-card w-full max-w-md rounded-2xl flex flex-col shadow-2xl border border-zinc-700/50">
+            <div class="p-5 border-b border-zinc-800/50 flex justify-between items-center bg-black/40 rounded-t-2xl">
+                <h3 class="text-lg font-bold text-white" data-i18n="settings">Settings & Backup</h3>
+                <button onclick="closeSettingsModal()" class="text-zinc-500 hover:text-white transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            
+            <div class="p-6 space-y-6">
+                <!-- API Key -->
+                <div>
+                    <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="api_key">FinnHub API Key (For US Stocks)</label>
+                    <input type="text" id="setting-api-key" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 text-sm" placeholder="Leave blank to use mock/delayed data">
+                    <p class="text-[10px] text-zinc-500 mt-2">Get a free key at finnhub.io. Saved locally to your browser.</p>
+                </div>
+
+                <hr class="border-zinc-800">
+
+                <!-- JSON Backup -->
+                <div>
+                    <h4 class="text-sm font-bold text-white mb-3" data-i18n="data_management">Data Management (JSON)</h4>
+                    <div class="flex gap-3">
+                        <button onclick="exportJSON()" class="flex-1 px-4 py-3 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold rounded-lg transition border border-zinc-700 flex flex-col items-center gap-1">
+                            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            <span data-i18n="export_json">Export Backup</span>
+                        </button>
+                        <button onclick="document.getElementById('import-file').click()" class="flex-1 px-4 py-3 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold rounded-lg transition border border-zinc-700 flex flex-col items-center gap-1">
+                            <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            <span data-i18n="import_json">Restore Backup</span>
+                        </button>
+                        <input type="file" id="import-file" accept=".json" class="hidden" onchange="importJSON(event)">
+                    </div>
+                </div>
+
+                <div class="flex gap-3 justify-end pt-2">
+                    <button type="button" onclick="saveSettings()" class="px-6 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-lg shadow-lg transition" data-i18n="save_settings">Save Config</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-6 right-6 transform translate-y-[150%] opacity-0 transition-all duration-500 z-50 bg-zinc-900 border border-zinc-700 text-white px-5 py-4 rounded-xl shadow-2xl flex items-center gap-3">
+    <div id="toast" class="fixed bottom-6 right-6 transform translate-y-[150%] opacity-0 transition-all duration-500 z-[60] bg-zinc-900 border border-zinc-700 text-white px-5 py-4 rounded-xl shadow-2xl flex items-center gap-3">
         <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         <span id="toast-msg" class="font-bold text-sm">Success!</span>
     </div>
 
     <script>
-        // ================= FULLY INTEGRATED APIs =================
-        const FINNHUB_API_KEY = 'd7ub5jpr01qnv95muqpgd7ub5jpr01qnv95muqq0'; 
-        // =========================================================
-
+        // ================= CONFIG & STATE =================
+        let editingTxId = null; // Store ID when editing
         let currentCurrency = 'USD';
         let currentLang = 'en';
         let jpyRate = 150.0;
@@ -246,58 +301,35 @@
 
         Chart.defaults.color = '#71717a'; Chart.defaults.font.family = 'Montserrat';
 
-        // --- EMPTY DATABASE (V12) ---
+        // Load DB & API Key
         let ledger = JSON.parse(localStorage.getItem('wealthLedgerV12')) || [];
         let historySnapshots = JSON.parse(localStorage.getItem('wealthHistoryV12')) || [];
+        let finnhubApiKey = localStorage.getItem('wealthApiKey') || '';
         
         let portfolioState = { bank: 0, invested: 0, realizedPl: 0, dividends: 0, assets: {} };
         let liveDataCache = { totalNet: 0, holdings: [] };
 
-        // Asset Libraries for Dropdowns (Including user's favorites)
+        // Lists
         const assetLibrary = {
-            stock_us: [
-                {val: 'MSFT', name: 'MSFT (Microsoft)'}, {val: 'LLY', name: 'LLY (Eli Lilly)'}, 
-                {val: 'ABBV', name: 'ABBV (AbbVie)'}, {val: 'ASTS', name: 'ASTS (AST SpaceMobile)'},
-                {val: 'AAPL', name: 'AAPL (Apple)'}, {val: 'NVDA', name: 'NVDA (NVIDIA)'},
-                {val: 'TSLA', name: 'TSLA (Tesla)'}, {val: 'AMZN', name: 'AMZN (Amazon)'},
-                {val: 'OTHER', name: '+ Other (Type Manually)'}
-            ],
-            stock_jp: [
-                {val: '7203.T', name: '7203.T (Toyota)'}, {val: '6758.T', name: '6758.T (Sony)'}, 
-                {val: '9984.T', name: '9984.T (SoftBank)'}, {val: '8306.T', name: '8306.T (MUFG)'}, 
-                {val: '7974.T', name: '7974.T (Nintendo)'}, {val: '8035.T', name: '8035.T (Tokyo Electron)'},
-                {val: 'OTHER', name: '+ Other (Type Manually)'}
-            ],
-            crypto: [
-                {val: 'BTC', name: 'BTC (Bitcoin)'}, {val: 'ETH', name: 'ETH (Ethereum)'}, 
-                {val: 'SOL', name: 'SOL (Solana)'}, {val: 'BNB', name: 'BNB (Binance Coin)'}, 
-                {val: 'OTHER', name: '+ Other (Type Manually)'}
-            ]
+            stock_us: [ {val: 'MSFT', name: 'MSFT'}, {val: 'LLY', name: 'LLY'}, {val: 'ABBV', name: 'ABBV'}, {val: 'AAPL', name: 'AAPL'}, {val: 'NVDA', name: 'NVDA'}, {val: 'TSLA', name: 'TSLA'}, {val: 'OTHER', name: '+ Other (Type)'} ],
+            stock_jp: [ {val: '7203.T', name: '7203.T (Toyota)'}, {val: '6758.T', name: '6758.T (Sony)'}, {val: '9984.T', name: '9984.T'}, {val: 'OTHER', name: '+ Other (Type)'} ],
+            crypto: [ {val: 'BTC', name: 'BTC'}, {val: 'ETH', name: 'ETH'}, {val: 'SOL', name: 'SOL'}, {val: 'OTHER', name: '+ Other (Type)'} ]
         };
 
         const dictionary = {
-            en: { title: "Wealth Portfolio", live_market: "Live Market", export: "CSV", log_tx: "Log Transaction", total_net: "Total Net Worth", unrealized: "Unrealized P/L", realized: "Realized P/L & Div", cash: "Cash Balance", assets_val: "Equities & Crypto", history: "Net Worth Trend", allocation: "Allocation", portfolio: "Portfolio Holdings", recent_tx: "Recent Transactions", asset: "Asset", avg_cost: "Avg Cost", price: "Live Price", units: "Units", current_val: "Market Value", tx_date: "Transaction Date", tx_type: "Type", tx_asset: "Market", ticker: "Asset Ticker", cancel: "Cancel", save: "Save", fetching: "Connecting...", sync_done: "Live sync complete", mock_price: "Using delayed prices", amount: "Amount (USD)", price_unit: "Price/Unit (USD)", empty_portfolio: "Portfolio is empty. Log a deposit to start.", no_data: "No data yet", deleted: "Transaction deleted." },
-            jp: { title: "資産ポートフォリオ", live_market: "リアルタイム", export: "出力", log_tx: "取引記録", total_net: "純資産総額", unrealized: "未実現損益", realized: "実現損益と配当", cash: "現金残高", assets_val: "株式と暗号資産", history: "資産推移", allocation: "資産配分", portfolio: "保有資産", recent_tx: "最近の取引", asset: "資産", avg_cost: "平均取得単価", price: "現在価格", units: "数量", current_val: "評価額", tx_date: "取引日", tx_type: "種類", tx_asset: "市場", ticker: "ティッカー", cancel: "キャンセル", save: "保存", fetching: "接続中...", sync_done: "同期完了", mock_price: "遅延価格を使用中", amount: "金額 (USD)", price_unit: "取得単価 (USD)", empty_portfolio: "ポートフォリオは空です。入金を記録してください。", no_data: "データなし", deleted: "取引を削除しました。" }
+            en: { title: "Wealth Portfolio", live_market: "Live Market", export_json: "Export Data", import_json: "Import Data", settings: "Settings & Backup", api_key: "FinnHub API Key", data_management: "Backup & Restore", save_settings: "Save Config", log_tx: "Log Transaction", total_net: "Total Net Worth", unrealized: "Unrealized P/L", realized: "Realized P/L & Div", cash: "Cash Balance", click_details: "Click to view cash history", assets_val: "Equities & Crypto", history: "Net Worth Trend", allocation: "Allocation", portfolio: "Portfolio Holdings", click_asset_hint: "(Click any asset to view transaction history)", asset: "Asset", avg_cost: "Avg Cost", price: "Live Price", units: "Units", current_val: "Market Value", tx_date: "Transaction Date", tx_type: "Type", tx_asset: "Market", ticker: "Asset Ticker", cancel: "Cancel", save: "Save", fetching: "Connecting...", sync_done: "Live sync complete", mock_price: "Using delayed prices", amount: "Amount (USD)", price_unit: "Price/Unit (USD)", empty_portfolio: "Portfolio is empty. Log a deposit to start.", no_data: "No data yet", deleted: "Transaction deleted." },
+            jp: { title: "資産ポートフォリオ", live_market: "リアルタイム", export_json: "出力 (JSON)", import_json: "読込 (JSON)", settings: "設定とバックアップ", api_key: "FinnHub APIキー", data_management: "データ管理", save_settings: "保存", log_tx: "取引記録", total_net: "純資産総額", unrealized: "未実現損益", realized: "実現損益と配当", cash: "現金残高", click_details: "クリックで履歴表示", assets_val: "株式と暗号資産", history: "資産推移", allocation: "資産配分", portfolio: "保有資産", click_asset_hint: "(資産をクリックで履歴を表示)", asset: "資産", avg_cost: "平均取得単価", price: "現在価格", units: "数量", current_val: "評価額", tx_date: "取引日", tx_type: "種類", tx_asset: "市場", ticker: "ティッカー", cancel: "キャンセル", save: "保存", fetching: "接続中...", sync_done: "同期完了", mock_price: "遅延価格を使用中", amount: "金額 (USD)", price_unit: "取得単価 (USD)", empty_portfolio: "ポートフォリオは空です。入金を記録してください。", no_data: "データなし", deleted: "取引を削除しました。" }
         };
 
-        // --- REAL-TIME DATE & TIME (JAPAN TIMEZONE) ---
-        function getJstDate() {
-            const d = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Tokyo"}));
-            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        }
-
-        function updateDateDisplay() {
-            const dateEl = document.getElementById('current-date');
-            const now = new Date();
-            const options = { timeZone: 'Asia/Tokyo', year: 'numeric', month: 'short', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' };
-            dateEl.innerText = now.toLocaleString(currentLang === 'jp' ? 'ja-JP' : 'en-US', options).toUpperCase() + ' (JST)';
-        }
+        // ================= UTILS =================
+        function getJstDate() { const d = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Tokyo"})); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+        function updateDateDisplay() { const dateEl = document.getElementById('current-date'); const now = new Date(); dateEl.innerText = now.toLocaleString(currentLang === 'jp' ? 'ja-JP' : 'en-US', { timeZone: 'Asia/Tokyo', year: 'numeric', month: 'short', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' }).toUpperCase() + ' (JST)'; }
         setInterval(updateDateDisplay, 30000);
 
         function setLanguage(lang) {
             currentLang = lang;
-            document.getElementById('btn-en').className = lang === 'en' ? "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white transition shadow" : "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition";
-            document.getElementById('btn-jp').className = lang === 'jp' ? "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white transition shadow" : "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition";
+            document.getElementById('btn-en').className = lang === 'en' ? "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white shadow" : "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition";
+            document.getElementById('btn-jp').className = lang === 'jp' ? "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white shadow" : "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition";
             document.querySelectorAll('[data-i18n]').forEach(el => { if(dictionary[lang][el.getAttribute('data-i18n')]) el.innerText = dictionary[lang][el.getAttribute('data-i18n')]; });
             updateDateDisplay(); 
         }
@@ -324,6 +356,7 @@
             return { text: 'text-zinc-400', bg: 'bg-zinc-800', sign: '' };
         }
 
+        // ================= CORE LOGIC =================
         function rebuildPortfolio() {
             portfolioState = { bank: 0, invested: 0, realizedPl: 0, dividends: 0, assets: {} };
             let sortedLedger = [...ledger].sort((a, b) => new Date(a.date) - new Date(b.date) || a.id - b.id);
@@ -332,7 +365,10 @@
                 let tkr = tx.ticker ? tx.ticker.toUpperCase() : null;
                 if(tx.type === 'DEPOSIT') { portfolioState.bank += tx.price; portfolioState.invested += tx.price; }
                 if(tx.type === 'WITHDRAW') { portfolioState.bank -= tx.price; portfolioState.invested -= tx.price; }
-                if(tx.type === 'DIVIDEND') { portfolioState.bank += tx.price; portfolioState.dividends += tx.price; }
+                if(tx.type === 'DIVIDEND') { 
+                    portfolioState.bank += tx.price; portfolioState.dividends += tx.price; 
+                    // Add to realized PL if attached to a ticker for ROI calculations (Optional, but kept simple here)
+                }
                 
                 if(tx.type === 'BUY' || tx.type === 'SELL') {
                     let cls = tx.assetClass === 'stock_us' || tx.assetClass === 'stock_jp' ? 'stock' : 'crypto';
@@ -355,28 +391,30 @@
             });
         }
 
-        // --- FULLY FUNCTIONAL APIs ---
         async function fetchPrice(type, ticker) {
             ticker = ticker.toUpperCase();
             if (type === 'crypto') {
                 try { let r = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${ticker}USDT`); let d = await r.json(); return parseFloat(d.price); } catch(e) { return 0; }
             } else {
                 if(ticker.endsWith('.T')) {
+                    // Improved Proxy for Yahoo
                     try {
                         let url = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`);
-                        let r = await fetch(`https://api.allorigins.win/get?url=${url}`);
-                        let d = await r.json(); let p = JSON.parse(d.contents);
-                        let priceInJpy = p.chart.result[0].meta.regularMarketPrice;
+                        let r = await fetch(`https://api.allorigins.win/raw?url=${url}`);
+                        let d = await r.json(); let priceInJpy = d.chart.result[0].meta.regularMarketPrice;
                         return priceInJpy / jpyRate; 
                     } catch(e) { return 0; }
                 }
-                if (!FINNHUB_API_KEY) return 0;
-                try { let r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`); let d = await r.json(); return d.c > 0 ? d.c : 0; } catch(e) { return 0; }
+                if (!finnhubApiKey) return 0;
+                try { let r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${finnhubApiKey}`); let d = await r.json(); return d.c > 0 ? d.c : 0; } catch(e) { return 0; }
             }
         }
 
         async function processLiveDashboard() {
             rebuildPortfolio();
+            document.getElementById('status-msg').innerText = dictionary[currentLang]['fetching'];
+            
+            try { let r = await fetch('https://open.er-api.com/v6/latest/USD'); let d = await r.json(); jpyRate = d.rates.JPY; document.getElementById('forex-rate').innerText = `1 USD = ¥${jpyRate.toFixed(2)}`; } catch(e) {}
             
             if(ledger.length === 0) {
                 document.getElementById('status-msg').innerText = dictionary[currentLang]['sync_done'];
@@ -385,25 +423,24 @@
                 return;
             }
 
-            document.getElementById('status-msg').innerText = dictionary[currentLang]['fetching'];
-            // Fetch Latest Forex (USD/JPY)
-            try { let r = await fetch('https://open.er-api.com/v6/latest/USD'); let d = await r.json(); jpyRate = d.rates.JPY; document.getElementById('forex-rate').innerText = `1 USD = ¥${jpyRate.toFixed(2)}`; } catch(e) {}
+            // ================= PROMISE.ALL UPGRADE (BLAZING FAST) =================
+            const activeAssets = Object.entries(portfolioState.assets).filter(([_, ast]) => ast.units > 0);
             
+            const fetchedHoldings = await Promise.all(activeAssets.map(async ([tkr, ast]) => {
+                const px = await fetchPrice(ast.class, tkr);
+                const val = ast.units * px;
+                const cost = ast.units * ast.avgCost;
+                const pl = val - cost;
+                return { tkr, type: ast.class, units: ast.units, cost: ast.avgCost, px, val, pl, plPct: cost>0?(pl/cost)*100:0, color: ast.class==='stock'?'bg-yellow-500':'bg-orange-500' };
+            }));
+
             let stTotal = 0; let stCost = 0; let crTotal = 0; let crCost = 0;
-            let holdings = [];
+            fetchedHoldings.forEach(h => {
+                if(h.type === 'stock') { stTotal += h.val; stCost += (h.units * h.cost); } 
+                else { crTotal += h.val; crCost += (h.units * h.cost); }
+            });
 
-            for (let [tkr, ast] of Object.entries(portfolioState.assets)) {
-                if(ast.units <= 0) continue;
-                let px = await fetchPrice(ast.class, tkr);
-                let val = ast.units * px;
-                let cost = ast.units * ast.avgCost;
-                let pl = val - cost;
-                
-                if(ast.class === 'stock') { stTotal += val; stCost += cost; } else { crTotal += val; crCost += cost; }
-                holdings.push({ tkr, type: ast.class, units: ast.units, cost: ast.avgCost, px, val, pl, plPct: cost>0?(pl/cost)*100:0, color: ast.class==='stock'?'bg-yellow-500':'bg-orange-500' });
-            }
-
-            liveDataCache = { totalNet: portfolioState.bank + stTotal + crTotal, totalCost: portfolioState.bank + stCost + crCost, stTotal, crTotal, holdings };
+            liveDataCache = { totalNet: portfolioState.bank + stTotal + crTotal, totalCost: portfolioState.bank + stCost + crCost, stTotal, crTotal, holdings: fetchedHoldings };
 
             const today = getJstDate();
             let snap = historySnapshots.find(s => s.date === today);
@@ -411,10 +448,11 @@
             historySnapshots.sort((a,b) => new Date(a.date) - new Date(b.date));
             localStorage.setItem('wealthHistoryV12', JSON.stringify(historySnapshots));
 
-            document.getElementById('status-msg').innerText = FINNHUB_API_KEY ? dictionary[currentLang]['sync_done'] : dictionary[currentLang]['mock_price'];
+            document.getElementById('status-msg').innerText = finnhubApiKey ? dictionary[currentLang]['sync_done'] : dictionary[currentLang]['mock_price'];
             renderUI();
         }
 
+        // ================= RENDER =================
         function renderUI() {
             document.getElementById('val-total').innerText = formatMoney(liveDataCache.totalNet);
             let unrlz = liveDataCache.totalNet - liveDataCache.totalCost;
@@ -423,11 +461,9 @@
             document.getElementById('val-unrealized-pct').className = `text-xs font-bold px-1.5 py-0.5 rounded ${upst.bg} ${upst.text}`;
             document.getElementById('val-unrealized-pct').innerText = `${upst.sign}${Math.abs(unPct).toFixed(2)}% (${formatMoney(unrlz,false,true)})`;
             
-            let rzst = getPlStyle(portfolioState.realizedPl);
             document.getElementById('val-realized').innerText = formatMoney(portfolioState.realizedPl, false, true);
-            document.getElementById('val-realized').className = `text-2xl font-bold mb-1 ${rzst.text}`;
+            document.getElementById('val-realized').className = `text-2xl font-bold mb-1 ${getPlStyle(portfolioState.realizedPl).text}`;
             document.getElementById('val-dividends').innerText = `Dividends: ${formatMoney(portfolioState.dividends, false, true)}`;
-
             document.getElementById('val-bank').innerText = formatMoney(portfolioState.bank);
             document.getElementById('val-invested').innerText = `Total Invested: ${formatMoney(portfolioState.invested)}`;
 
@@ -436,155 +472,232 @@
             document.getElementById('val-eq-pct').innerText = `EQ: ${astTot>0 ? Math.round((liveDataCache.stTotal/astTot)*100) : 0}%`;
             document.getElementById('val-cr-pct').innerText = `CR: ${astTot>0 ? Math.round((liveDataCache.crTotal/astTot)*100) : 0}%`;
 
+            // Table
             const tbody = document.getElementById('holdings-table-body'); tbody.innerHTML = '';
             if(liveDataCache.holdings.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-zinc-600 text-sm">${dictionary[currentLang]['empty_portfolio']}</td></tr>`;
             } else {
                 liveDataCache.holdings.sort((a,b)=>b.val-a.val).forEach(a => {
                     let p = getPlStyle(a.plPct);
-                    tbody.innerHTML += `<tr class="border-b border-zinc-800/50 hover:bg-zinc-800/30">
-                        <td class="py-3"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full ${a.color} text-black font-bold text-xs flex items-center justify-center">${a.tkr.substring(0,3)}</div><div><div class="font-bold text-white">${a.tkr}</div></div></div></td>
+                    // ADDED onClick to row!
+                    tbody.innerHTML += `<tr onclick="openAssetHistory('${a.tkr}', '${a.color}')" class="border-b border-zinc-800/50 hover:bg-zinc-800/60 cursor-pointer transition group">
+                        <td class="py-3 pl-2 rounded-l-lg"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full ${a.color} text-black font-bold text-[10px] flex items-center justify-center">${a.tkr.substring(0,4)}</div><div class="font-bold text-white group-hover:text-yellow-400 transition">${a.tkr}</div></div></td>
                         <td class="py-3 text-right text-zinc-400">${formatMoney(a.cost, true)}</td>
                         <td class="py-3 text-right text-white font-medium">${formatMoney(a.px, true)}</td>
                         <td class="py-3 text-right text-zinc-300">${a.units.toLocaleString(undefined,{maximumFractionDigits:4})}</td>
                         <td class="py-3 text-right font-bold text-white">${formatMoney(a.val)}</td>
-                        <td class="py-3 text-right"><div class="flex flex-col items-end"><span class="font-bold ${p.text}">${formatMoney(a.pl,false,true)}</span><span class="text-[10px] px-1 rounded ${p.bg} ${p.text}">${p.sign}${Math.abs(a.plPct).toFixed(2)}%</span></div></td>
+                        <td class="py-3 text-right pr-2 rounded-r-lg"><div class="flex flex-col items-end"><span class="font-bold ${p.text}">${formatMoney(a.pl,false,true)}</span><span class="text-[10px] px-1 rounded ${p.bg} ${p.text}">${p.sign}${Math.abs(a.plPct).toFixed(2)}%</span></div></td>
                     </tr>`;
                 });
             }
 
-            const tlog = document.getElementById('tx-log-container'); tlog.innerHTML = '';
-            if(ledger.length === 0) {
-                tlog.innerHTML = `<div class="text-center text-zinc-600 text-sm py-4">${dictionary[currentLang]['no_data']}</div>`;
-            } else {
-                let sortedLedgerDesc = [...ledger].sort((a, b) => new Date(b.date) - new Date(a.date) || b.id - a.id);
-                sortedLedgerDesc.slice(0, 50).forEach(tx => {
-                    let icon = '💸'; let color = 'text-zinc-300'; let txt = ''; let amt = '';
-                    if(tx.type === 'DEPOSIT') { icon = '📥'; color = 'text-emerald-400'; txt = 'Deposit'; amt = `+${formatMoney(tx.price)}`; }
-                    if(tx.type === 'WITHDRAW') { icon = '📤'; color = 'text-rose-400'; txt = 'Withdraw'; amt = `-${formatMoney(tx.price)}`; }
-                    if(tx.type === 'DIVIDEND') { icon = '💰'; color = 'text-emerald-400'; txt = `${tx.ticker} Div`; amt = `+${formatMoney(tx.price)}`; }
-                    if(tx.type === 'BUY') { icon = '🛒'; color = 'text-yellow-400'; txt = `Buy ${tx.ticker}`; amt = `-${formatMoney(tx.qty * tx.price)}`; }
-                    if(tx.type === 'SELL') { icon = '🤝'; color = 'text-emerald-400'; txt = `Sell ${tx.ticker}`; amt = `+${formatMoney(tx.qty * tx.price)}`; }
-                    
-                    tlog.innerHTML += `<div class="flex justify-between items-center bg-zinc-900/50 p-2 rounded-lg border border-zinc-800 group"><div class="flex items-center gap-3"><span class="text-xl">${icon}</span><div><div class="text-sm font-bold text-white">${txt}</div><div class="text-[10px] text-zinc-500">${tx.date}</div></div></div><div class="flex items-center gap-3"><div class="text-sm font-bold ${color}">${amt}</div><button onclick="deleteTx(${tx.id})" class="text-zinc-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div></div>`;
-                });
-            }
-
+            // Charts
             if(chartAlloc) chartAlloc.destroy();
             if(liveDataCache.totalNet > 0) {
-                document.getElementById('allocationChart').classList.remove('hidden');
-                document.getElementById('chart-container-alloc').querySelector('span').classList.add('hidden');
+                document.getElementById('allocationChart').classList.remove('hidden'); document.getElementById('chart-container-alloc').querySelector('span').classList.add('hidden');
                 chartAlloc = new Chart(document.getElementById('allocationChart').getContext('2d'), { type: 'doughnut', data: { labels: ['Cash', 'Equities', 'Crypto'], datasets: [{ data: [portfolioState.bank, liveDataCache.stTotal, liveDataCache.crTotal], backgroundColor: ['#ffffff', '#eab308', '#f97316'], borderWidth:0 }] }, options: { responsive:true, maintainAspectRatio:false, cutout:'80%', plugins: {legend:{display:false}} }});
-            } else {
-                document.getElementById('allocationChart').classList.add('hidden');
-                document.getElementById('chart-container-alloc').querySelector('span').classList.remove('hidden');
-            }
+            } else { document.getElementById('allocationChart').classList.add('hidden'); document.getElementById('chart-container-alloc').querySelector('span').classList.remove('hidden'); }
 
             if(chartTrend) chartTrend.destroy();
             if(historySnapshots.length > 0 && liveDataCache.totalNet > 0) {
-                document.getElementById('trendChart').classList.remove('hidden');
-                document.getElementById('chart-container-trend').querySelector('span').classList.add('hidden');
+                document.getElementById('trendChart').classList.remove('hidden'); document.getElementById('chart-container-trend').querySelector('span').classList.add('hidden');
                 let grad = document.getElementById('trendChart').getContext('2d').createLinearGradient(0,0,0,300); grad.addColorStop(0, 'rgba(234,179,8,0.3)'); grad.addColorStop(1, 'transparent');
                 chartTrend = new Chart(document.getElementById('trendChart').getContext('2d'), { type: 'line', data: { labels: historySnapshots.map(h=>h.date), datasets: [{ data: historySnapshots.map(h=>h.net), borderColor: '#eab308', backgroundColor: grad, fill:true, tension:0.3, borderWidth:2, pointRadius:2 }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{display:false},y:{grid:{color:'#27272a'}}} } });
-            } else {
-                document.getElementById('trendChart').classList.add('hidden');
-                document.getElementById('chart-container-trend').querySelector('span').classList.remove('hidden');
-            }
+            } else { document.getElementById('trendChart').classList.add('hidden'); document.getElementById('chart-container-trend').querySelector('span').classList.remove('hidden'); }
         }
 
-        // --- TX MODAL & DROPDOWN LOGIC ---
+        // ================= TX MODAL (ADD / EDIT) =================
         function populateTickers() {
             const cls = document.getElementById('tx-asset-class').value;
-            const sel = document.getElementById('tx-ticker-select');
-            sel.innerHTML = '';
-            assetLibrary[cls].forEach(opt => {
-                let o = document.createElement('option');
-                o.value = opt.val; o.text = opt.name; sel.appendChild(o);
-            });
+            const sel = document.getElementById('tx-ticker-select'); sel.innerHTML = '';
+            assetLibrary[cls].forEach(opt => { let o = document.createElement('option'); o.value = opt.val; o.text = opt.name; sel.appendChild(o); });
             handleTickerSelect();
         }
 
         function handleTickerSelect() {
-            const val = document.getElementById('tx-ticker-select').value;
-            const cust = document.getElementById('tx-ticker-custom');
-            if(val === 'OTHER') { cust.classList.remove('hidden'); cust.required = true; cust.value = ''; } 
-            else { cust.classList.add('hidden'); cust.required = false; cust.value = ''; }
+            const val = document.getElementById('tx-ticker-select').value; const cust = document.getElementById('tx-ticker-custom');
+            if(val === 'OTHER') { cust.classList.remove('hidden'); cust.required = true; } else { cust.classList.add('hidden'); cust.required = false; }
         }
 
-        function openModal() { 
-            document.getElementById('tx-modal').classList.remove('hidden'); 
-            document.getElementById('tx-date').value = getJstDate();
-            document.getElementById('tx-type').value = 'DEPOSIT';
-            toggleTxFields(); 
+        function openModal(editId = null) { 
+            editingTxId = editId;
+            document.getElementById('tx-modal').classList.remove('hidden');
+            document.getElementById('tx-modal-title').innerText = editId ? "Edit Transaction" : dictionary[currentLang]['log_tx'];
+            
+            if(editId) {
+                let tx = ledger.find(t => t.id === editId);
+                document.getElementById('tx-date').value = tx.date;
+                document.getElementById('tx-type').value = tx.type;
+                toggleTxFields();
+                if(tx.assetClass) document.getElementById('tx-asset-class').value = tx.assetClass;
+                populateTickers();
+                
+                if(tx.ticker) {
+                    let sel = document.getElementById('tx-ticker-select');
+                    let exists = Array.from(sel.options).some(o => o.value === tx.ticker);
+                    if(!exists) { sel.value = 'OTHER'; handleTickerSelect(); document.getElementById('tx-ticker-custom').value = tx.ticker; } 
+                    else { sel.value = tx.ticker; handleTickerSelect(); }
+                }
+                
+                if(tx.qty) document.getElementById('tx-qty').value = tx.qty;
+                document.getElementById('tx-price').value = tx.price;
+            } else {
+                document.getElementById('tx-form').reset();
+                document.getElementById('tx-date').value = getJstDate();
+                document.getElementById('tx-type').value = 'DEPOSIT';
+                toggleTxFields(); 
+            }
         }
-        function closeModal() { document.getElementById('tx-modal').classList.add('hidden'); document.getElementById('tx-form').reset(); }
+        function closeModal() { document.getElementById('tx-modal').classList.add('hidden'); editingTxId = null; }
         
         function toggleTxFields() {
             let t = document.getElementById('tx-type').value;
             document.getElementById('field-asset').classList.toggle('hidden', !(t==='BUY'||t==='SELL'));
             document.getElementById('field-ticker').classList.toggle('hidden', !(t==='BUY'||t==='SELL'||t==='DIVIDEND'));
             document.getElementById('field-qty').classList.toggle('hidden', !(t==='BUY'||t==='SELL'));
-            
             document.getElementById('lbl-price').innerText = dictionary[currentLang][(t==='DEPOSIT'||t==='WITHDRAW'||t==='DIVIDEND') ? 'amount' : 'price_unit'];
             
             if(t==='BUY'||t==='SELL') populateTickers();
-            else if(t==='DIVIDEND') {
-                const sel = document.getElementById('tx-ticker-select'); sel.innerHTML = '<option value="OTHER">Enter Ticker manually</option>';
-                handleTickerSelect();
-            }
+            else if(t==='DIVIDEND') { document.getElementById('tx-ticker-select').innerHTML = '<option value="OTHER">Enter Ticker manually</option>'; handleTickerSelect(); }
         }
 
         document.getElementById('tx-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            let date = document.getElementById('tx-date').value;
-            let type = document.getElementById('tx-type').value;
-            let qty = parseFloat(document.getElementById('tx-qty').value) || 0;
-            let price = parseFloat(document.getElementById('tx-price').value) || 0;
-            let assetClass = document.getElementById('tx-asset-class').value;
+            let tx = {
+                id: editingTxId || Date.now(),
+                date: document.getElementById('tx-date').value,
+                type: document.getElementById('tx-type').value,
+                assetClass: document.getElementById('tx-asset-class').value,
+                price: parseFloat(document.getElementById('tx-price').value) || 0,
+                qty: null, ticker: null
+            };
             
-            let ticker = null;
-            if(type !== 'DEPOSIT' && type !== 'WITHDRAW') {
+            if(tx.type !== 'DEPOSIT' && tx.type !== 'WITHDRAW') {
                 let selVal = document.getElementById('tx-ticker-select').value;
-                ticker = (selVal === 'OTHER') ? document.getElementById('tx-ticker-custom').value.toUpperCase() : selVal;
+                tx.ticker = (selVal === 'OTHER') ? document.getElementById('tx-ticker-custom').value.toUpperCase() : selVal;
+                if(tx.type==='BUY'||tx.type==='SELL') tx.qty = parseFloat(document.getElementById('tx-qty').value) || 0;
             }
+
+            if(editingTxId) { let idx = ledger.findIndex(t => t.id === editingTxId); if(idx !== -1) ledger[idx] = tx; } 
+            else { ledger.push(tx); }
             
-            ledger.push({ id: Date.now(), date: date, type, assetClass, ticker, qty: (type==='BUY'||type==='SELL')?qty:null, price });
             localStorage.setItem('wealthLedgerV12', JSON.stringify(ledger));
+            closeModal(); showToast(dictionary[currentLang]['save'] + " Success");
             
-            closeModal(); 
-            showToast(dictionary[currentLang]['save'] + " Success");
+            // Auto close history modal if open, to refresh UI cleanly
+            closeHistoryModal();
             processLiveDashboard();
         });
 
+        // ================= SPECIFIC HISTORY VIEW (CLICKABLE UI) =================
+        function openCashHistory() {
+            const hList = document.getElementById('history-list'); hList.innerHTML = '';
+            document.getElementById('history-icon').innerHTML = '💵';
+            document.getElementById('history-icon').className = 'w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-lg shadow-lg';
+            document.getElementById('history-title').innerText = 'Cash Flow History';
+            
+            let cashTxs = ledger.filter(t => t.type === 'DEPOSIT' || t.type === 'WITHDRAW' || (t.type === 'DIVIDEND' && !t.ticker)).sort((a, b) => new Date(b.date) - new Date(a.date));
+            renderHistoryRows(cashTxs, hList);
+            document.getElementById('history-modal').classList.remove('hidden');
+        }
+
+        function openAssetHistory(ticker, colorClass) {
+            const hList = document.getElementById('history-list'); hList.innerHTML = '';
+            document.getElementById('history-icon').innerHTML = ticker.substring(0,3);
+            document.getElementById('history-icon').className = `w-10 h-10 rounded-full ${colorClass} flex items-center justify-center text-black font-bold text-sm shadow-lg`;
+            document.getElementById('history-title').innerText = `${ticker} Transactions`;
+            
+            let assetTxs = ledger.filter(t => t.ticker === ticker).sort((a, b) => new Date(b.date) - new Date(a.date));
+            renderHistoryRows(assetTxs, hList);
+            document.getElementById('history-modal').classList.remove('hidden');
+        }
+
+        function renderHistoryRows(txArray, container) {
+            if(txArray.length === 0) { container.innerHTML = `<div class="text-center text-zinc-500 py-6">No records found.</div>`; return; }
+            txArray.forEach(tx => {
+                let icon = '💸'; let color = 'text-zinc-300'; let txt = ''; let amt = ''; let detail = '';
+                if(tx.type === 'DEPOSIT') { icon = '📥'; color = 'text-emerald-400'; txt = 'Deposit'; amt = `+${formatMoney(tx.price)}`; }
+                if(tx.type === 'WITHDRAW') { icon = '📤'; color = 'text-rose-400'; txt = 'Withdraw'; amt = `-${formatMoney(tx.price)}`; }
+                if(tx.type === 'DIVIDEND') { icon = '💰'; color = 'text-emerald-400'; txt = 'Dividend'; amt = `+${formatMoney(tx.price)}`; }
+                if(tx.type === 'BUY') { icon = '🛒'; color = 'text-yellow-400'; txt = 'Buy'; amt = `-${formatMoney(tx.qty * tx.price)}`; detail = `${tx.qty} @ ${formatMoney(tx.price, true)}`; }
+                if(tx.type === 'SELL') { icon = '🤝'; color = 'text-emerald-400'; txt = 'Sell'; amt = `+${formatMoney(tx.qty * tx.price)}`; detail = `${tx.qty} @ ${formatMoney(tx.price, true)}`; }
+                
+                container.innerHTML += `
+                <div class="flex justify-between items-center bg-zinc-900/80 p-3.5 rounded-xl border border-zinc-800 hover:border-zinc-700 transition group">
+                    <div class="flex items-center gap-4">
+                        <span class="text-2xl">${icon}</span>
+                        <div>
+                            <div class="text-sm font-bold text-white flex items-center gap-2">${txt} <span class="text-xs font-normal text-zinc-400">${detail}</span></div>
+                            <div class="text-[11px] text-zinc-500 mt-0.5">${tx.date}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-sm font-bold ${color} text-right">${amt}</div>
+                        <div class="flex items-center gap-2 border-l border-zinc-700 pl-4">
+                            <!-- EDIT BTN -->
+                            <button onclick="openModal(${tx.id})" class="text-zinc-500 hover:text-yellow-500 transition p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                            <!-- DEL BTN -->
+                            <button onclick="deleteTx(${tx.id})" class="text-zinc-500 hover:text-rose-500 transition p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                        </div>
+                    </div>
+                </div>`;
+            });
+        }
+        function closeHistoryModal() { document.getElementById('history-modal').classList.add('hidden'); }
+
         function deleteTx(id) {
-            if(confirm('Delete this transaction?')) {
+            if(confirm('Delete this transaction forever?')) {
                 ledger = ledger.filter(t => t.id !== id);
                 localStorage.setItem('wealthLedgerV12', JSON.stringify(ledger));
                 showToast(dictionary[currentLang]['deleted']);
-                processLiveDashboard();
+                closeHistoryModal(); processLiveDashboard();
             }
         }
 
-        function exportCSV() {
-            if(liveDataCache.holdings.length === 0) return;
-            let csv = "Ticker,Type,Units,Avg Cost,Live Price,Market Value,Unrealized P/L\n";
-            liveDataCache.holdings.forEach(h => { csv += `${h.tkr},${h.type},${h.units},${h.cost},${h.px},${h.val},${h.pl}\n`; });
-            let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Portfolio_${getJstDate()}.csv`; link.click();
+        // ================= SETTINGS & BACKUP (JSON) =================
+        function openSettingsModal() { document.getElementById('setting-api-key').value = finnhubApiKey; document.getElementById('settings-modal').classList.remove('hidden'); }
+        function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); }
+        
+        function saveSettings() {
+            finnhubApiKey = document.getElementById('setting-api-key').value.trim();
+            localStorage.setItem('wealthApiKey', finnhubApiKey);
+            closeSettingsModal(); showToast('Settings Saved!');
+            processLiveDashboard();
+        }
+
+        function exportJSON() {
+            const dataStr = JSON.stringify({ ledger: ledger, history: historySnapshots }, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a'); link.href = url; link.download = `WealthBackup_${getJstDate()}.json`; link.click();
+        }
+
+        function importJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if(data.ledger) {
+                        ledger = data.ledger; localStorage.setItem('wealthLedgerV12', JSON.stringify(ledger));
+                        if(data.history) { historySnapshots = data.history; localStorage.setItem('wealthHistoryV12', JSON.stringify(historySnapshots)); }
+                        closeSettingsModal(); showToast("Data Restored Successfully!");
+                        processLiveDashboard();
+                    } else alert("Invalid JSON format.");
+                } catch (err) { alert("Error reading file!"); }
+            };
+            reader.readAsText(file);
         }
 
         function refreshLivePrices() { processLiveDashboard(); }
         function showToast(msg) {
-            document.getElementById('toast-msg').innerText = msg;
-            const t = document.getElementById('toast');
-            t.classList.remove('translate-y-[150%]', 'opacity-0');
-            setTimeout(() => t.classList.add('translate-y-[150%]', 'opacity-0'), 3000);
+            document.getElementById('toast-msg').innerText = msg; const t = document.getElementById('toast');
+            t.classList.remove('translate-y-[150%]', 'opacity-0'); setTimeout(() => t.classList.add('translate-y-[150%]', 'opacity-0'), 3000);
         }
 
         // Boot
-        updateDateDisplay();
-        setLanguage('en');
-        processLiveDashboard();
+        updateDateDisplay(); setLanguage('en'); processLiveDashboard();
     </script>
 </body>
 </html>
