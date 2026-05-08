@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Investor Dashboard V4.1</title>
+    <title>Ultimate Investor Dashboard V6 (Editable Modal & Read-Only Summary)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -19,6 +19,10 @@
         .text-profit { color: #34d399; } .bg-profit { background-color: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); }
         .text-loss { color: #fb7185; } .bg-loss { background-color: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); }
         input[type="date"] { color-scheme: dark; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 6px; }
+        ::-webkit-scrollbar-thumb:hover { background: #52525b; }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-zinc-900 via-black to-black">
@@ -71,21 +75,43 @@
         </div>
     </div>
 
-    <!-- ASSET LIST -->
-    <div class="mb-10">
-        <h2 class="text-lg font-bold text-white mb-6 px-2">Active Portfolio <span class="text-zinc-500 text-xs font-normal ml-2">(Click to see history & details)</span></h2>
-        <div id="assets-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            <!-- Dynamic Asset Cards -->
+    <!-- HOLDINGS TABLE (Click row to see/edit history) -->
+    <div class="glass-card rounded-3xl p-8 overflow-x-auto mb-10">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-lg font-bold text-white">Portfolio Holdings <span class="text-zinc-500 text-xs font-normal ml-2">(Click any row to view & edit history)</span></h2>
         </div>
+        <table class="w-full text-left text-sm border-collapse whitespace-nowrap">
+            <thead>
+                <tr class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest border-b border-zinc-800">
+                    <th class="pb-4 pl-2">Asset</th>
+                    <th class="pb-4 text-right">Avg Cost</th>
+                    <th class="pb-4 text-right">Live Price</th>
+                    <th class="pb-4 text-right">Units</th>
+                    <th class="pb-4 text-right">Market Value</th>
+                    <th class="pb-4 text-right pr-2">Unrealized P/L</th>
+                </tr>
+            </thead>
+            <tbody id="holdings-table-body">
+                <tr><td colspan="6" class="py-10 text-center text-zinc-600 font-medium">Portfolio is empty. Log a transaction to start.</td></tr>
+            </tbody>
+        </table>
     </div>
 
     <!-- CHARTS SECTION -->
-    <div class="glass-card rounded-3xl p-8">
+    <div class="glass-card rounded-3xl p-8 mb-10">
         <h3 class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-6">Net Worth Trend</h3>
         <div class="h-64 w-full"><canvas id="trendChart"></canvas></div>
     </div>
 
-    <!-- MODAL: ASSET DETAILS & HISTORY -->
+    <!-- RECENT TRANSACTIONS (READ-ONLY SUMMARY) -->
+    <div class="glass-card rounded-3xl p-8 mb-10">
+        <h3 class="text-lg font-bold text-white mb-6">Recent Transactions <span class="text-zinc-500 text-xs font-normal ml-2">(Read-only summary)</span></h3>
+        <div id="recent-tx-list" class="space-y-1">
+            <!-- Rendered by JS -->
+        </div>
+    </div>
+
+    <!-- MODAL: ASSET DETAILS & HISTORY (EDITABLE) -->
     <div id="history-modal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-xl z-50 flex justify-center items-center p-4">
         <div class="glass-card w-full max-w-2xl rounded-[2rem] flex flex-col shadow-2xl border border-zinc-800 max-h-[90vh]">
             <div class="p-8 border-b border-zinc-800 flex justify-between items-center">
@@ -93,7 +119,7 @@
                     <div id="history-icon" class="w-14 h-14 rounded-2xl bg-yellow-500 flex items-center justify-center text-black font-black text-xl"></div>
                     <div>
                         <h3 class="text-2xl font-black text-white" id="history-title">Asset</h3>
-                        <p class="text-xs font-bold text-zinc-500 uppercase tracking-tighter" id="history-subtitle">History & Performance</p>
+                        <p class="text-xs font-bold text-zinc-500 uppercase tracking-tighter" id="history-subtitle">Manage Transactions</p>
                     </div>
                 </div>
                 <button onclick="closeHistoryModal()" class="text-zinc-500 hover:text-white p-2 transition"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
@@ -107,7 +133,7 @@
         </div>
     </div>
 
-    <!-- FORM MODAL -->
+    <!-- FORM MODAL (For ADD and EDIT) -->
     <div id="tx-modal" class="hidden fixed inset-0 bg-black/90 z-50 flex justify-center items-center p-4">
         <div class="glass-card w-full max-w-md rounded-3xl p-8 border border-zinc-700">
             <h3 class="text-xl font-bold text-white mb-6" id="tx-modal-title">Log Transaction</h3>
@@ -160,10 +186,11 @@
 
     <script>
         // --- STATE & CONFIG ---
+        let editingTxId = null; // Track if we are editing an existing TX
         let ledger = JSON.parse(localStorage.getItem('wealthLedgerV12')) || [];
         let historySnapshots = JSON.parse(localStorage.getItem('wealthHistoryV12')) || [];
         
-        // ฟื้นคืนชีพ FinnHub API Key ของคุณใบเฟิร์น! (ฝังเป็นค่า Default ไปเลย)
+        // FinnHub API Key
         const USER_PROVIDED_KEY = 'd7ub5jpr01qnv95muqpgd7ub5jpr01qnv95muqq0';
         let finnhubApiKey = localStorage.getItem('wealthApiKey') || USER_PROVIDED_KEY;
         
@@ -205,7 +232,7 @@
                     let r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${finnhubApiKey}`);
                     let d = await r.json(); return d.c || 0;
                 }
-                return (100 + Math.random() * 50); // Mock fallback if API fails
+                return (100 + Math.random() * 50); // Fallback
             } catch(e) { return 0; }
         }
 
@@ -264,33 +291,65 @@
             document.getElementById('val-unrealized-pct').innerText = `${unPl >= 0 ? '+' : ''}${unPct.toFixed(2)}% (${formatMoney(unPl)})`;
             document.getElementById('val-unrealized-pct').className = `inline-block mt-4 text-[10px] font-bold px-2 py-1 rounded bg-zinc-900 ${unPl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
 
-            const grid = document.getElementById('assets-grid'); grid.innerHTML = '';
-            liveDataCache.holdings.forEach(h => {
-                let color = h.class === 'crypto' ? 'bg-orange-500' : h.class === 'stock_jp' ? 'bg-white' : 'bg-yellow-500';
-                grid.innerHTML += `
-                <div class="glass-card rounded-3xl p-6 interactive-card group" onclick="openAssetHistory('${h.tkr}', '${color}')">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="w-10 h-10 rounded-xl ${color} flex items-center justify-center text-black font-black text-xs">${h.tkr.substring(0,3)}</div>
-                        <div class="text-right">
-                            <div class="text-white font-black">${h.tkr}</div>
-                            <div class="text-[10px] text-zinc-500 font-bold">${h.units.toFixed(4)} Units</div>
-                        </div>
-                    </div>
-                    <div class="flex justify-between items-end">
-                        <div>
-                            <div class="text-xs text-zinc-500 font-bold uppercase mb-1">Value</div>
-                            <div class="text-xl font-bold text-white">${formatMoney(h.val)}</div>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-[10px] font-black ${getPlStyle(h.pl)}">${h.pl >= 0 ? '+' : ''}${h.plPct.toFixed(2)}%</div>
-                            <div class="text-[10px] text-zinc-500">Avg: ${formatMoney(h.cost, true)}</div>
-                        </div>
-                    </div>
-                </div>`;
-            });
-
+            // TABLE RENDERING
+            const tbody = document.getElementById('holdings-table-body');
+            tbody.innerHTML = '';
             if(liveDataCache.holdings.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center text-zinc-500 py-10 bg-zinc-900/50 rounded-3xl border border-zinc-800 border-dashed">Portfolio is empty. Log a transaction to start.</div>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="py-10 text-center text-zinc-600 font-medium">Portfolio is empty. Log a transaction to start.</td></tr>`;
+            } else {
+                liveDataCache.holdings.sort((a,b)=>b.val-a.val).forEach(h => {
+                    let color = h.class === 'crypto' ? 'bg-orange-500' : h.class === 'stock_jp' ? 'bg-white' : 'bg-yellow-500';
+                    tbody.innerHTML += `
+                    <tr onclick="openAssetHistory('${h.tkr}', '${color}')" class="border-b border-zinc-800/50 hover:bg-zinc-800/60 cursor-pointer transition group">
+                        <td class="py-4 pl-2 rounded-l-xl">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg ${color} flex items-center justify-center text-black font-black text-[10px]">${h.tkr.substring(0,3)}</div>
+                                <div class="font-bold text-white group-hover:text-yellow-400 transition">${h.tkr}</div>
+                            </div>
+                        </td>
+                        <td class="py-4 text-right text-zinc-400 font-medium">${formatMoney(h.cost, true)}</td>
+                        <td class="py-4 text-right text-white font-bold">${formatMoney(h.px, true)}</td>
+                        <td class="py-4 text-right text-zinc-300 font-medium">${h.units.toLocaleString(undefined,{maximumFractionDigits:4})}</td>
+                        <td class="py-4 text-right font-black text-white">${formatMoney(h.val)}</td>
+                        <td class="py-4 text-right pr-2 rounded-r-xl">
+                            <div class="flex flex-col items-end">
+                                <span class="font-black ${getPlStyle(h.pl)}">${h.pl >= 0 ? '+' : ''}${formatMoney(h.pl)}</span>
+                                <span class="text-[10px] font-bold ${getPlStyle(h.pl)} opacity-80">${h.pl >= 0 ? '+' : ''}${h.plPct.toFixed(2)}%</span>
+                            </div>
+                        </td>
+                    </tr>`;
+                });
+            }
+
+            // RECENT TRANSACTIONS (Read-Only)
+            const recentList = document.getElementById('recent-tx-list');
+            recentList.innerHTML = '';
+            let recentTxs = [...ledger].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0, 15); // Show last 15
+            
+            if(recentTxs.length === 0) {
+                recentList.innerHTML = `<div class="text-zinc-500 text-sm py-4">No recent transactions.</div>`;
+            } else {
+                recentTxs.forEach(tx => {
+                    let desc = tx.type;
+                    if(tx.ticker) desc += ` ${tx.ticker}`;
+                    if(tx.qty) desc += ` (${tx.qty} Units)`;
+                    
+                    let valStr = formatMoney(tx.price * (tx.qty || 1));
+                    let isNegative = ['WITHDRAW','BUY'].includes(tx.type);
+                    let color = isNegative ? 'text-rose-500' : 'text-emerald-500';
+                    let sign = isNegative ? '-' : '+';
+                    
+                    recentList.innerHTML += `
+                    <div class="flex justify-between items-center py-4 border-b border-zinc-800/50 last:border-0">
+                        <div>
+                            <div class="text-sm font-bold text-white">${desc}</div>
+                            <div class="text-[10px] text-zinc-500 font-bold mt-1">${tx.date}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-bold ${color}">${sign}${valStr}</div>
+                        </div>
+                    </div>`;
+                });
             }
 
             // Charts
@@ -313,7 +372,7 @@
             document.getElementById('asset-perf-box').innerHTML = h ? `
                 <div class="bg-zinc-900 p-4 rounded-2xl">
                     <div class="text-[10px] text-zinc-500 font-bold mb-1 uppercase">Market Value</div>
-                    <div class="text-lg font-bold">${formatMoney(h.val)}</div>
+                    <div class="text-lg font-bold text-white">${formatMoney(h.val)}</div>
                 </div>
                 <div class="bg-zinc-900 p-4 rounded-2xl">
                     <div class="text-[10px] text-zinc-500 font-bold mb-1 uppercase">Total P/L</div>
@@ -330,7 +389,10 @@
                     </div>
                     <div class="text-right">
                         <div class="text-sm font-bold text-white">${formatMoney(tx.price * (tx.qty || 1))}</div>
-                        <button onclick="deleteTx(${tx.id})" class="text-[10px] text-rose-500 font-bold uppercase mt-1 hover:text-rose-400">Delete Record</button>
+                        <div class="mt-1 flex gap-3 justify-end">
+                            <button onclick="openModal(${tx.id})" class="text-[10px] text-yellow-500 font-bold uppercase hover:text-yellow-400">Edit</button>
+                            <button onclick="deleteTx(${tx.id})" class="text-[10px] text-rose-500 font-bold uppercase hover:text-rose-400">Delete</button>
+                        </div>
                     </div>
                 </div>`;
             });
@@ -343,16 +405,65 @@
             document.getElementById('history-icon').innerText = '$';
             document.getElementById('history-title').innerText = 'Cash Flow';
             document.getElementById('asset-perf-box').innerHTML = '';
+            
             const list = document.getElementById('history-list'); list.innerHTML = '';
             txs.forEach(tx => {
-                list.innerHTML += `<div class="flex justify-between items-center bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800"><div><div class="text-sm font-bold text-white">${tx.type}</div><div class="text-[10px] text-zinc-500 font-bold">${tx.date}</div></div><div class="text-right"><div class="text-sm font-bold ${tx.type==='WITHDRAW'?'text-rose-500':'text-emerald-500'}">${tx.type==='WITHDRAW'?'-':'+'}${formatMoney(tx.price)}</div><button onclick="deleteTx(${tx.id})" class="text-[10px] text-rose-500 font-bold uppercase mt-1 hover:text-rose-400">Delete Record</button></div></div>`;
+                list.innerHTML += `
+                <div class="flex justify-between items-center bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800">
+                    <div>
+                        <div class="text-sm font-bold text-white">${tx.type}</div>
+                        <div class="text-[10px] text-zinc-500 font-bold">${tx.date}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-bold ${tx.type==='WITHDRAW'?'text-rose-500':'text-emerald-500'}">${tx.type==='WITHDRAW'?'-':'+'}${formatMoney(tx.price)}</div>
+                        <div class="mt-1 flex gap-3 justify-end">
+                            <button onclick="openModal(${tx.id})" class="text-[10px] text-yellow-500 font-bold uppercase hover:text-yellow-400">Edit</button>
+                            <button onclick="deleteTx(${tx.id})" class="text-[10px] text-rose-500 font-bold uppercase hover:text-rose-400">Delete</button>
+                        </div>
+                    </div>
+                </div>`;
             });
             document.getElementById('history-modal').classList.remove('hidden');
         }
 
         function closeHistoryModal() { document.getElementById('history-modal').classList.add('hidden'); }
-        function openModal() { document.getElementById('tx-modal').classList.remove('hidden'); document.getElementById('tx-date').value = new Date().toISOString().split('T')[0]; toggleTxFields(); }
-        function closeModal() { document.getElementById('tx-modal').classList.add('hidden'); }
+        
+        function openModal(editId = null) { 
+            editingTxId = editId;
+            document.getElementById('tx-modal').classList.remove('hidden'); 
+            document.getElementById('tx-modal-title').innerText = editId ? "Edit Transaction" : "Log Transaction";
+            
+            if(editId) {
+                let tx = ledger.find(t => t.id === editId);
+                document.getElementById('tx-date').value = tx.date;
+                document.getElementById('tx-type').value = tx.type;
+                toggleTxFields();
+                if(tx.assetClass) document.getElementById('tx-asset-class').value = tx.assetClass;
+                populateTickers();
+                
+                if(tx.ticker) {
+                    let sel = document.getElementById('tx-ticker-select');
+                    let exists = Array.from(sel.options).some(o => o.value === tx.ticker);
+                    if(!exists) { 
+                        sel.value = 'OTHER'; 
+                        handleTickerSelect(); 
+                        document.getElementById('tx-ticker-custom').value = tx.ticker; 
+                    } else { 
+                        sel.value = tx.ticker; 
+                        handleTickerSelect(); 
+                    }
+                }
+                if(tx.qty) document.getElementById('tx-qty').value = tx.qty;
+                document.getElementById('tx-price').value = tx.price;
+            } else {
+                document.getElementById('tx-form').reset();
+                document.getElementById('tx-date').value = new Date().toISOString().split('T')[0];
+                document.getElementById('tx-type').value = 'DEPOSIT';
+                toggleTxFields();
+            }
+        }
+        function closeModal() { document.getElementById('tx-modal').classList.add('hidden'); editingTxId = null; }
+        
         function openSettingsModal() { document.getElementById('setting-api-key').value = finnhubApiKey; document.getElementById('settings-modal').classList.remove('hidden'); }
         function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); }
         
@@ -379,21 +490,37 @@
             e.preventDefault();
             let tkr = document.getElementById('tx-ticker-select').value;
             if(tkr==='OTHER') tkr = document.getElementById('tx-ticker-custom').value.toUpperCase();
-            ledger.push({
-                id: Date.now(),
+            
+            let txData = {
+                id: editingTxId || Date.now(),
                 date: document.getElementById('tx-date').value,
                 type: document.getElementById('tx-type').value,
                 assetClass: document.getElementById('tx-asset-class').value,
-                ticker: tkr,
+                ticker: ['BUY','SELL','DIVIDEND'].includes(document.getElementById('tx-type').value) ? tkr : null,
                 qty: parseFloat(document.getElementById('tx-qty').value) || 0,
                 price: parseFloat(document.getElementById('tx-price').value) || 0
-            });
+            };
+
+            if (editingTxId) {
+                let idx = ledger.findIndex(t => t.id === editingTxId);
+                if (idx !== -1) ledger[idx] = txData;
+            } else {
+                ledger.push(txData);
+            }
+
             localStorage.setItem('wealthLedgerV12', JSON.stringify(ledger));
-            closeModal(); refreshDashboard();
+            closeModal(); 
+            closeHistoryModal(); // ปิด Modal ประวัติไปเลยเพื่อความชัวร์ จะได้เปิดมาดูใหม่แบบอัปเดตแล้ว
+            refreshDashboard();
         });
 
         function deleteTx(id) {
-            if(confirm('Are you sure you want to delete this record?')) { ledger = ledger.filter(t=>t.id!==id); localStorage.setItem('wealthLedgerV12', JSON.stringify(ledger)); refreshDashboard(); closeHistoryModal(); }
+            if(confirm('Are you sure you want to delete this record?')) { 
+                ledger = ledger.filter(t=>t.id!==id); 
+                localStorage.setItem('wealthLedgerV12', JSON.stringify(ledger)); 
+                closeHistoryModal();
+                refreshDashboard(); 
+            }
         }
 
         function setCurrency(cur) { currentCurrency = cur; document.getElementById('btn-usd').className = cur==='USD' ? 'px-4 py-2 rounded-lg text-xs font-bold bg-zinc-800 text-yellow-500 shadow' : 'px-4 py-2 rounded-lg text-xs font-bold text-zinc-500 transition hover:text-zinc-300'; document.getElementById('btn-jpy').className = cur==='JPY' ? 'px-4 py-2 rounded-lg text-xs font-bold bg-zinc-800 text-yellow-500 shadow' : 'px-4 py-2 rounded-lg text-xs font-bold text-zinc-500 transition hover:text-zinc-300'; renderUI(); }
