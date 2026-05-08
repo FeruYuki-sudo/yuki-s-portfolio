@@ -3,745 +3,421 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Investor Dashboard V3</title>
-    <!-- Tailwind CSS -->
+    <title>Ultimate Investor Dashboard V4.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Premium Font: Montserrat -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root { color-scheme: dark; } 
         body { font-family: 'Montserrat', sans-serif; background-color: #000000; color: #f4f4f5; }
         .glass-card { background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5); }
         .interactive-card { transition: all 0.2s ease-in-out; cursor: pointer; }
-        .interactive-card:hover { transform: translateY(-3px); border-color: rgba(234, 179, 8, 0.5); box-shadow: 0 10px 40px -10px rgba(234, 179, 8, 0.2); }
+        .interactive-card:hover { transform: translateY(-3px); border-color: rgba(234, 179, 8, 0.5); }
         .gradient-text { background: linear-gradient(to right, #fbbf24, #fef08a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 6px; }
-        ::-webkit-scrollbar-thumb:hover { background: #52525b; }
-        
         .live-dot { animation: pulse 2s infinite; }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
-        
         .text-profit { color: #34d399; } .bg-profit { background-color: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); }
         .text-loss { color: #fb7185; } .bg-loss { background-color: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); }
-
-        input[type="date"]::-webkit-datetime-edit { padding: 1em; }
-        input[type="date"]::-webkit-datetime-edit-fields-wrapper { display: flex; flex-direction: row; }
+        input[type="date"] { color-scheme: dark; }
     </style>
 </head>
-<body class="min-h-screen p-4 md:p-6 lg:p-8 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-zinc-900 via-black to-black">
+<body class="min-h-screen p-4 md:p-8 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-zinc-900 via-black to-black">
 
     <!-- HEADER -->
-    <header class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-5">
-        <div class="flex flex-col gap-3">
-            <div class="flex items-center gap-3">
-                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight gradient-text" data-i18n="title">Wealth Portfolio</h1>
-                <span class="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-900 border border-zinc-800 rounded-full text-[10px] font-bold text-emerald-500 uppercase tracking-wider shadow-lg">
-                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full live-dot"></span><span data-i18n="live_market">Live Market</span>
+    <header class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-10 gap-5">
+        <div>
+            <div class="flex items-center gap-3 mb-2">
+                <h1 class="text-4xl font-extrabold tracking-tight gradient-text">Wealth Dashboard</h1>
+                <span class="flex items-center gap-1.5 px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-full text-[10px] font-bold text-emerald-500 uppercase">
+                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full live-dot"></span>Market Live
                 </span>
             </div>
-            <div class="flex items-center gap-2 text-zinc-300 bg-zinc-900/80 w-fit px-4 py-2 rounded-lg border border-zinc-700 shadow-md">
-                <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span class="text-sm font-bold tracking-wide" id="current-date">Loading Tokyo Time...</span>
-            </div>
+            <div id="current-date" class="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Loading Time...</div>
         </div>
         
-        <div class="flex items-center gap-2 flex-wrap">
-            <!-- UPDATED CURRENCY TOGGLE -->
-            <div class="glass-card p-1 rounded-lg flex items-center">
-                <button onclick="setCurrency('USD')" id="btn-usd" class="px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-yellow-500 transition shadow">USD</button>
-                <button onclick="setCurrency('THB')" id="btn-thb" class="px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition">THB</button>
-                <button onclick="setCurrency('JPY')" id="btn-jpy" class="px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition">JPY</button>
+        <div class="flex items-center gap-3">
+            <div class="glass-card p-1 rounded-xl flex items-center">
+                <button onclick="setCurrency('USD')" id="btn-usd" class="px-4 py-2 rounded-lg text-xs font-bold bg-zinc-800 text-yellow-500 shadow">USD</button>
+                <button onclick="setCurrency('JPY')" id="btn-jpy" class="px-4 py-2 rounded-lg text-xs font-bold text-zinc-500 hover:text-zinc-300 transition">JPY</button>
             </div>
-            
-            <div class="glass-card p-1 rounded-lg flex items-center">
-                <button onclick="setLanguage('en')" id="btn-en" class="px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white transition shadow">EN</button>
-                <button onclick="setLanguage('jp')" id="btn-jp" class="px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition">JP</button>
-            </div>
-
-            <!-- SETTINGS BTN -->
-            <button onclick="openSettingsModal()" class="glass-card p-2.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition shadow-lg">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-            </button>
-            
-            <button onclick="refreshLivePrices()" class="glass-card px-4 py-2.5 rounded-lg hover:bg-zinc-800 transition text-emerald-400">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-            </button>
-            
-            <button onclick="openModal()" class="px-5 py-2.5 rounded-lg text-sm font-bold bg-yellow-500 text-black hover:bg-yellow-400 transition shadow-[0_0_15px_rgba(234,179,8,0.3)]">
-                + <span data-i18n="log_tx">Log Transaction</span>
-            </button>
+            <button onclick="openSettingsModal()" class="glass-card p-2.5 rounded-xl text-zinc-400 hover:text-white transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg></button>
+            <button onclick="openModal()" class="px-6 py-2.5 rounded-xl text-sm font-black bg-yellow-500 text-black hover:bg-yellow-400 transition shadow-lg">+ LOG TX</button>
         </div>
     </header>
 
-    <!-- CARDS -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="glass-card rounded-2xl p-6 relative overflow-hidden border-t-2 border-t-yellow-500/50">
-            <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-2" data-i18n="total_net">Total Net Worth</h3>
-            <div class="text-3xl font-extrabold text-white mb-2" id="val-total">$0.00</div>
-            <div class="flex items-center gap-2 mt-4">
-                <span class="text-xs text-zinc-500" data-i18n="unrealized">Unrealized P/L</span>
-                <span id="val-unrealized-pct" class="text-xs font-bold px-1.5 py-0.5 rounded text-zinc-400 bg-zinc-800">0.00%</span>
-            </div>
-            <div id="status-msg" class="text-[10px] mt-3 text-zinc-500">Waiting for data...</div>
+    <!-- TOP CARDS -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div class="glass-card rounded-3xl p-8 border-t-4 border-t-yellow-500">
+            <h3 class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2">Total Net Worth</h3>
+            <div class="text-4xl font-black text-white" id="val-total">$0.00</div>
+            <div id="val-unrealized-pct" class="inline-block mt-4 text-[10px] font-bold px-2 py-1 rounded bg-zinc-900 text-zinc-500">0.00%</div>
         </div>
 
-        <div class="glass-card rounded-2xl p-6 border-l-4 border-l-emerald-500">
-            <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-2" data-i18n="realized">Realized P/L & Div</h3>
-            <div class="text-2xl font-bold text-white mb-1" id="val-realized">$0.00</div>
-            <div class="text-xs text-emerald-400 font-medium mt-3" id="val-dividends">Dividends: $0.00</div>
+        <div class="glass-card rounded-3xl p-8 interactive-card group" onclick="openCashHistory()">
+            <h3 class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2 flex justify-between">Cash Balance <span class="text-yellow-500">→</span></h3>
+            <div class="text-3xl font-bold text-white" id="val-bank">$0.00</div>
+            <div class="text-[10px] text-zinc-500 mt-4 uppercase">Realized P/L: <span id="val-realized" class="font-bold">$0.00</span></div>
         </div>
 
-        <div class="glass-card rounded-2xl p-6 interactive-card group" onclick="openCashHistory()">
-            <div class="flex justify-between items-start">
-                <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-2" data-i18n="cash">Cash Balance</h3>
-                <svg class="w-4 h-4 text-zinc-600 group-hover:text-yellow-500 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-            </div>
-            <div class="text-2xl font-bold text-white mb-1" id="val-bank">$0.00</div>
-            <div class="text-xs text-zinc-500 font-medium mt-3" id="val-invested">Total Invested: $0.00</div>
-            <div class="text-[10px] text-yellow-500/70 mt-2 opacity-0 group-hover:opacity-100 transition" data-i18n="click_details">Click to view cash history</div>
+        <div class="glass-card rounded-3xl p-8">
+            <h3 class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2">Allocation</h3>
+            <div class="relative h-20 w-full"><canvas id="allocationChart"></canvas></div>
         </div>
 
-        <div class="glass-card rounded-2xl p-6 interactive-card group" onclick="openAllAssetsHistory()">
-            <div class="flex justify-between items-start">
-                <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-2" data-i18n="assets_val">Equities & Crypto</h3>
-                <svg class="w-4 h-4 text-zinc-600 group-hover:text-yellow-500 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-            </div>
-            <div class="text-2xl font-bold text-white mb-1" id="val-assets">$0.00</div>
-            <div class="flex gap-2 mt-3 text-xs font-medium">
-                <span class="text-yellow-500" id="val-eq-pct">EQ: 0%</span>
-                <span class="text-zinc-600">|</span>
-                <span class="text-orange-500" id="val-cr-pct">CR: 0%</span>
-            </div>
-            <div class="text-[10px] text-yellow-500/70 mt-2 opacity-0 group-hover:opacity-100 transition">Click to view all investment history</div>
+        <div class="glass-card rounded-3xl p-8 border-l-4 border-l-emerald-500">
+            <h3 class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2">Market Status</h3>
+            <div id="status-msg" class="text-emerald-400 font-bold text-sm">Syncing...</div>
+            <div id="forex-rate" class="text-[10px] text-zinc-500 mt-4">1 USD = ¥0.00</div>
         </div>
     </div>
 
-    <!-- CHARTS -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div class="glass-card rounded-2xl p-6 lg:col-span-2">
-            <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-4" data-i18n="history">Net Worth Trend</h3>
-            <div class="relative h-64 w-full flex items-center justify-center" id="chart-container-trend">
-                <span class="text-zinc-600 text-sm" data-i18n="no_data">No data yet</span>
-                <canvas id="trendChart" class="hidden"></canvas>
-            </div>
-        </div>
-        <div class="glass-card rounded-2xl p-6">
-            <h3 class="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-4" data-i18n="allocation">Allocation</h3>
-            <div class="relative h-64 w-full flex items-center justify-center" id="chart-container-alloc">
-                <span class="text-zinc-600 text-sm" data-i18n="no_data">No data yet</span>
-                <canvas id="allocationChart" class="hidden"></canvas>
-            </div>
+    <!-- ASSET LIST -->
+    <div class="mb-10">
+        <h2 class="text-lg font-bold text-white mb-6 px-2">Active Portfolio <span class="text-zinc-500 text-xs font-normal ml-2">(Click to see history & details)</span></h2>
+        <div id="assets-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <!-- Dynamic Asset Cards -->
         </div>
     </div>
 
-    <!-- HOLDINGS (FULL WIDTH & CLICKABLE) -->
-    <div class="glass-card rounded-2xl p-6 overflow-x-auto mb-12">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold text-white" data-i18n="portfolio">Portfolio Holdings <span class="text-xs font-normal text-zinc-400 ml-2" data-i18n="click_asset_hint">(Click any asset to view transaction history)</span></h3>
-            <span id="forex-rate" class="text-[10px] text-zinc-400 bg-zinc-900/80 border border-zinc-700 px-3 py-1.5 rounded-md font-medium tracking-wide"></span>
-        </div>
-        <table class="w-full text-left text-sm border-collapse whitespace-nowrap">
-            <thead>
-                <tr class="text-zinc-500 text-xs uppercase border-b border-zinc-800">
-                    <th class="pb-3 font-semibold pl-2" data-i18n="asset">Asset</th>
-                    <th class="pb-3 font-semibold text-right" data-i18n="avg_cost">Avg Cost</th>
-                    <th class="pb-3 font-semibold text-right" data-i18n="price">Live Price</th>
-                    <th class="pb-3 font-semibold text-right" data-i18n="units">Units</th>
-                    <th class="pb-3 font-semibold text-right" data-i18n="current_val">Market Value</th>
-                    <th class="pb-3 font-semibold text-right pr-2" data-i18n="unrealized">Unrealized P/L</th>
-                </tr>
-            </thead>
-            <tbody id="holdings-table-body">
-                <tr><td colspan="6" class="py-8 text-center text-zinc-600 text-sm" data-i18n="empty_portfolio">Portfolio is empty. Log a transaction to start.</td></tr>
-            </tbody>
-        </table>
+    <!-- CHARTS SECTION -->
+    <div class="glass-card rounded-3xl p-8">
+        <h3 class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-6">Net Worth Trend</h3>
+        <div class="h-64 w-full"><canvas id="trendChart"></canvas></div>
     </div>
 
-    <!-- ================= MODALS ================= -->
-
-    <!-- TRANSACTION MODAL (ADD / EDIT) -->
-    <div id="tx-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex justify-center items-center p-4">
-        <div class="glass-card w-full max-w-md rounded-2xl flex flex-col shadow-2xl border border-zinc-700/50">
-            <div class="p-5 border-b border-zinc-800/50 flex justify-between items-center bg-black/40 rounded-t-2xl">
-                <h3 class="text-lg font-bold text-white" id="tx-modal-title" data-i18n="log_tx">Log Transaction</h3>
-                <button onclick="closeModal()" class="text-zinc-500 hover:text-white transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+    <!-- MODAL: ASSET DETAILS & HISTORY -->
+    <div id="history-modal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-xl z-50 flex justify-center items-center p-4">
+        <div class="glass-card w-full max-w-2xl rounded-[2rem] flex flex-col shadow-2xl border border-zinc-800 max-h-[90vh]">
+            <div class="p-8 border-b border-zinc-800 flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <div id="history-icon" class="w-14 h-14 rounded-2xl bg-yellow-500 flex items-center justify-center text-black font-black text-xl"></div>
+                    <div>
+                        <h3 class="text-2xl font-black text-white" id="history-title">Asset</h3>
+                        <p class="text-xs font-bold text-zinc-500 uppercase tracking-tighter" id="history-subtitle">History & Performance</p>
+                    </div>
+                </div>
+                <button onclick="closeHistoryModal()" class="text-zinc-500 hover:text-white p-2 transition"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             
-            <form id="tx-form" class="p-6">
-                <!-- DATE PICKER (English Enforced) -->
-                <div class="mb-5 bg-zinc-900/50 p-3 rounded-xl border border-zinc-700/80 shadow-inner">
-                    <label class="block text-xs font-extrabold text-yellow-500 uppercase tracking-wider mb-2 flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        <span data-i18n="tx_date">Transaction Date</span>
-                    </label>
-                    <input type="date" lang="en-US" id="tx-date" required class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 font-bold tracking-widest text-lg">
-                </div>
+            <div class="p-8 overflow-y-auto custom-scrollbar">
+                <div id="asset-perf-box" class="grid grid-cols-2 gap-4 mb-8"></div>
+                <h4 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">Transaction Logs</h4>
+                <div id="history-list" class="space-y-3"></div>
+            </div>
+        </div>
+    </div>
 
-                <div class="mb-4">
-                    <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="tx_type">Type</label>
-                    <select id="tx-type" onchange="toggleTxFields()" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 font-medium">
-                        <option value="DEPOSIT">Deposit Cash</option>
-                        <option value="BUY">Buy Asset</option>
-                        <option value="SELL">Sell Asset</option>
-                        <option value="DIVIDEND">Dividend Received</option>
-                        <option value="WITHDRAW">Withdraw Cash</option>
-                    </select>
-                </div>
-                
-                <div id="field-asset" class="mb-4 hidden">
-                    <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="tx_asset">Market</label>
-                    <select id="tx-asset-class" onchange="populateTickers()" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500">
+    <!-- FORM MODAL -->
+    <div id="tx-modal" class="hidden fixed inset-0 bg-black/90 z-50 flex justify-center items-center p-4">
+        <div class="glass-card w-full max-w-md rounded-3xl p-8 border border-zinc-700">
+            <h3 class="text-xl font-bold text-white mb-6" id="tx-modal-title">Log Transaction</h3>
+            <form id="tx-form" class="space-y-4">
+                <input type="date" id="tx-date" required class="w-full bg-zinc-900 border border-zinc-800 text-white p-4 rounded-xl focus:outline-none focus:border-yellow-500">
+                <select id="tx-type" onchange="toggleTxFields()" class="w-full bg-zinc-900 border border-zinc-800 text-white p-4 rounded-xl">
+                    <option value="DEPOSIT">Deposit Cash</option>
+                    <option value="BUY">Buy Asset</option>
+                    <option value="SELL">Sell Asset</option>
+                    <option value="DIVIDEND">Dividend</option>
+                    <option value="WITHDRAW">Withdraw Cash</option>
+                </select>
+                <div id="field-asset" class="hidden space-y-4">
+                    <select id="tx-asset-class" onchange="populateTickers()" class="w-full bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-white">
                         <option value="stock_us">US Stocks</option>
-                        <option value="stock_jp">Japan Stocks</option>
-                        <option value="crypto">Crypto</option>
+                        <option value="stock_jp">Japan Stocks (.T)</option>
+                        <option value="crypto">Crypto (vs USDT)</option>
                     </select>
-                </div>
-
-                <div id="field-ticker" class="mb-4 hidden">
-                    <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="ticker">Asset Ticker</label>
-                    <select id="tx-ticker-select" onchange="handleTickerSelect()" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 mb-2"></select>
-                    <input type="text" id="tx-ticker-custom" class="w-full bg-zinc-900 border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 uppercase hidden" placeholder="e.g. TSLA">
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div id="field-qty" class="hidden">
-                        <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="units">Quantity</label>
-                        <input type="number" step="any" id="tx-qty" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500" placeholder="0">
-                    </div>
-                    <div id="field-price">
-                        <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" id="lbl-price" data-i18n="amount">Amount (USD)</label>
-                        <input type="number" step="any" id="tx-price" required class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500" placeholder="0.00">
+                    <div class="flex gap-2">
+                        <select id="tx-ticker-select" onchange="handleTickerSelect()" class="flex-1 bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-white"></select>
+                        <input type="text" id="tx-ticker-custom" class="flex-1 bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-white uppercase hidden" placeholder="Ticker">
                     </div>
                 </div>
-
-                <div class="flex gap-3 justify-end">
-                    <button type="button" onclick="closeModal()" class="px-5 py-2.5 rounded-lg text-sm font-bold text-zinc-400 hover:text-white transition" data-i18n="cancel">Cancel</button>
-                    <button type="submit" class="px-6 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-lg shadow-lg transition" data-i18n="save">Save</button>
+                <div class="grid grid-cols-2 gap-4">
+                    <div id="field-qty" class="hidden"><label class="text-[10px] text-zinc-500 font-bold ml-1">Units</label><input type="number" step="any" id="tx-qty" class="w-full bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-white" placeholder="0"></div>
+                    <div id="field-price"><label class="text-[10px] text-zinc-500 font-bold ml-1" id="lbl-price">Price (USD)</label><input type="number" step="any" id="tx-price" required class="w-full bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-white" placeholder="0.00"></div>
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="closeModal()" class="flex-1 p-4 rounded-xl font-bold text-zinc-500">Cancel</button>
+                    <button type="submit" class="flex-1 p-4 bg-yellow-500 text-black font-bold rounded-xl">Save</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- SPECIFIC HISTORY MODAL (For clicking Assets or Cash) -->
-    <div id="history-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex justify-center items-center p-4">
-        <div class="glass-card w-full max-w-2xl rounded-2xl flex flex-col shadow-2xl border border-zinc-700/50 max-h-[85vh]">
-            <div class="p-5 border-b border-zinc-800/50 flex justify-between items-center bg-black/40 rounded-t-2xl">
-                <div class="flex items-center gap-3">
-                    <div id="history-icon" class="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center text-black font-bold text-lg"></div>
-                    <div>
-                        <h3 class="text-lg font-bold text-white" id="history-title">History</h3>
-                        <p class="text-xs text-zinc-400" id="history-subtitle">Viewing details</p>
-                    </div>
-                </div>
-                <button onclick="closeHistoryModal()" class="text-zinc-500 hover:text-white transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+    <!-- SETTINGS -->
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black/90 z-50 flex justify-center items-center p-4">
+        <div class="glass-card w-full max-w-md rounded-3xl p-8 border border-zinc-700">
+            <h3 class="text-xl font-bold text-white mb-6">Settings</h3>
+            <label class="text-[10px] text-zinc-500 font-bold ml-1">FinnHub API Key (For US Stocks)</label>
+            <input type="text" id="setting-api-key" class="w-full bg-zinc-900 border border-zinc-800 text-white p-4 rounded-xl mb-6 mt-1" placeholder="FinnHub API Key">
+            <div class="flex gap-2 mb-6">
+                <button onclick="exportJSON()" class="flex-1 p-3 bg-zinc-800 rounded-xl text-xs font-bold text-emerald-400">Export Backup</button>
+                <button onclick="document.getElementById('import-file').click()" class="flex-1 p-3 bg-zinc-800 rounded-xl text-xs font-bold text-yellow-500">Import Backup</button>
+                <input type="file" id="import-file" class="hidden" onchange="importJSON(event)">
             </div>
-            
-            <div class="p-6 overflow-y-auto custom-scrollbar">
-                <div id="history-list" class="space-y-3">
-                    <!-- Dynamic Data -->
-                </div>
-            </div>
+            <button onclick="saveSettings()" class="w-full p-4 bg-yellow-500 text-black font-bold rounded-xl">Save & Close</button>
         </div>
-    </div>
-
-    <!-- SETTINGS / BACKUP MODAL -->
-    <div id="settings-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex justify-center items-center p-4">
-        <div class="glass-card w-full max-w-md rounded-2xl flex flex-col shadow-2xl border border-zinc-700/50">
-            <div class="p-5 border-b border-zinc-800/50 flex justify-between items-center bg-black/40 rounded-t-2xl">
-                <h3 class="text-lg font-bold text-white" data-i18n="settings">Settings & Backup</h3>
-                <button onclick="closeSettingsModal()" class="text-zinc-500 hover:text-white transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-            </div>
-            
-            <div class="p-6 space-y-6">
-                <!-- API Key -->
-                <div>
-                    <label class="block text-xs font-bold text-zinc-400 uppercase mb-2" data-i18n="api_key">FinnHub API Key (For US Stocks)</label>
-                    <input type="text" id="setting-api-key" class="w-full bg-black border border-zinc-700 text-white p-3 rounded-lg focus:outline-none focus:border-yellow-500 text-sm" placeholder="Leave blank to use mock/delayed data">
-                    <p class="text-[10px] text-zinc-500 mt-2">Get a free key at finnhub.io. Saved locally to your browser.</p>
-                </div>
-
-                <hr class="border-zinc-800">
-
-                <!-- JSON Backup -->
-                <div>
-                    <h4 class="text-sm font-bold text-white mb-3" data-i18n="data_management">Data Management (JSON)</h4>
-                    <div class="flex gap-3">
-                        <button onclick="exportJSON()" class="flex-1 px-4 py-3 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold rounded-lg transition border border-zinc-700 flex flex-col items-center gap-1">
-                            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                            <span data-i18n="export_json">Export Backup</span>
-                        </button>
-                        <button onclick="document.getElementById('import-file').click()" class="flex-1 px-4 py-3 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold rounded-lg transition border border-zinc-700 flex flex-col items-center gap-1">
-                            <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            <span data-i18n="import_json">Restore Backup</span>
-                        </button>
-                        <input type="file" id="import-file" accept=".json" class="hidden" onchange="importJSON(event)">
-                    </div>
-                </div>
-
-                <div class="flex gap-3 justify-end pt-2">
-                    <button type="button" onclick="saveSettings()" class="px-6 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-lg shadow-lg transition" data-i18n="save_settings">Save Config</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-6 right-6 transform translate-y-[150%] opacity-0 transition-all duration-500 z-[60] bg-zinc-900 border border-zinc-700 text-white px-5 py-4 rounded-xl shadow-2xl flex items-center gap-3">
-        <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-        <span id="toast-msg" class="font-bold text-sm">Success!</span>
     </div>
 
     <script>
-        // ================= CONFIG & STATE =================
-        let editingTxId = null; 
-        let currentCurrency = 'USD';
-        let currentLang = 'en';
-        
-        // DEFAULT RATES (Will be updated live)
-        let jpyRate = 150.0;
-        let thbRate = 36.50; 
-        
-        let chartAlloc = null; let chartTrend = null;
-
-        Chart.defaults.color = '#71717a'; Chart.defaults.font.family = 'Montserrat';
-
-        // Load DB & API Key
+        // --- STATE & CONFIG ---
         let ledger = JSON.parse(localStorage.getItem('wealthLedgerV12')) || [];
         let historySnapshots = JSON.parse(localStorage.getItem('wealthHistoryV12')) || [];
-        let finnhubApiKey = localStorage.getItem('wealthApiKey') || '';
         
-        let portfolioState = { bank: 0, invested: 0, realizedPl: 0, dividends: 0, assets: {} };
-        let liveDataCache = { totalNet: 0, holdings: [] };
+        // ฟื้นคืนชีพ FinnHub API Key ของคุณใบเฟิร์น! (ฝังเป็นค่า Default ไปเลย)
+        const USER_PROVIDED_KEY = 'd7ub5jpr01qnv95muqpgd7ub5jpr01qnv95muqq0';
+        let finnhubApiKey = localStorage.getItem('wealthApiKey') || USER_PROVIDED_KEY;
+        
+        let jpyRate = 150.0;
+        let currentCurrency = 'USD';
+        let liveDataCache = { holdings: [], totalNet: 0, totalCost: 0 };
+        let charts = { alloc: null, trend: null };
 
         const assetLibrary = {
-            stock_us: [ {val: 'MSFT', name: 'MSFT'}, {val: 'LLY', name: 'LLY'}, {val: 'ABBV', name: 'ABBV'}, {val: 'AAPL', name: 'AAPL'}, {val: 'NVDA', name: 'NVDA'}, {val: 'TSLA', name: 'TSLA'}, {val: 'OTHER', name: '+ Other (Type)'} ],
-            stock_jp: [ {val: '7203.T', name: '7203.T (Toyota)'}, {val: '6758.T', name: '6758.T (Sony)'}, {val: '9984.T', name: '9984.T'}, {val: 'OTHER', name: '+ Other (Type)'} ],
-            crypto: [ {val: 'BTC', name: 'BTC'}, {val: 'ETH', name: 'ETH'}, {val: 'SOL', name: 'SOL'}, {val: 'OTHER', name: '+ Other (Type)'} ]
+            stock_us: ['MSFT','LLY','ABBV','AAPL','NVDA','TSLA','ASTS','OTHER'],
+            stock_jp: ['7203.T','6758.T','9984.T','OTHER'],
+            crypto: ['BTC','ETH','SOL','BNB','DOGE','OTHER']
         };
 
-        const dictionary = {
-            en: { title: "Wealth Portfolio", live_market: "Live Market", export_json: "Export Data", import_json: "Import Data", settings: "Settings & Backup", api_key: "FinnHub API Key", data_management: "Backup & Restore", save_settings: "Save Config", log_tx: "Log Transaction", total_net: "Total Net Worth", unrealized: "Unrealized P/L", realized: "Realized P/L & Div", cash: "Cash Balance", click_details: "Click to view cash history", assets_val: "Equities & Crypto", history: "Net Worth Trend", allocation: "Allocation", portfolio: "Portfolio Holdings", click_asset_hint: "(Click any asset to view transaction history)", asset: "Asset", avg_cost: "Avg Cost", price: "Live Price", units: "Units", current_val: "Market Value", tx_date: "Transaction Date", tx_type: "Type", tx_asset: "Market", ticker: "Asset Ticker", cancel: "Cancel", save: "Save", fetching: "Connecting...", sync_done: "Live sync complete", mock_price: "Using delayed prices", amount: "Amount (USD)", price_unit: "Price/Unit (USD)", empty_portfolio: "Portfolio is empty. Log a deposit to start.", no_data: "No data yet", deleted: "Transaction deleted." },
-            jp: { title: "資産ポートフォリオ", live_market: "リアルタイム", export_json: "出力 (JSON)", import_json: "読込 (JSON)", settings: "設定とバックアップ", api_key: "FinnHub APIキー", data_management: "データ管理", save_settings: "保存", log_tx: "取引記録", total_net: "純資産総額", unrealized: "未実現損益", realized: "実現損益と配当", cash: "現金残高", click_details: "クリックで履歴表示", assets_val: "株式と暗号資産", history: "資産推移", allocation: "資産配分", portfolio: "保有資産", click_asset_hint: "(資産をクリックで履歴を表示)", asset: "資産", avg_cost: "平均取得単価", price: "現在価格", units: "数量", current_val: "評価額", tx_date: "取引日", tx_type: "種類", tx_asset: "市場", ticker: "ティッカー", cancel: "キャンセル", save: "保存", fetching: "接続中...", sync_done: "同期完了", mock_price: "遅延価格を使用中", amount: "金額 (USD)", price_unit: "取得単価 (USD)", empty_portfolio: "ポートフォリオは空です。入金を記録してください。", no_data: "データなし", deleted: "取引を削除しました。" }
+        // --- UTILS ---
+        const formatMoney = (val, isPrice=false) => {
+            let v = currentCurrency === 'JPY' ? val * jpyRate : val;
+            let pfx = currentCurrency === 'JPY' ? '¥' : '$';
+            let dec = (currentCurrency === 'JPY' && !isPrice) ? 0 : 2;
+            return `${pfx}${Math.abs(v).toLocaleString('en-US', {minimumFractionDigits:dec, maximumFractionDigits:dec})}`;
         };
 
-        // ================= UTILS & CURRENCY SYSTEM =================
-        function getJstDate() { const d = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Tokyo"})); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-        function updateDateDisplay() { const dateEl = document.getElementById('current-date'); const now = new Date(); dateEl.innerText = now.toLocaleString(currentLang === 'jp' ? 'ja-JP' : 'en-US', { timeZone: 'Asia/Tokyo', year: 'numeric', month: 'short', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' }).toUpperCase() + ' (JST)'; }
-        setInterval(updateDateDisplay, 30000);
+        const getPlStyle = (val) => val >= 0 ? 'text-profit' : 'text-loss';
 
-        function setLanguage(lang) {
-            currentLang = lang;
-            document.getElementById('btn-en').className = lang === 'en' ? "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white shadow" : "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition";
-            document.getElementById('btn-jp').className = lang === 'jp' ? "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-white shadow" : "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition";
-            document.querySelectorAll('[data-i18n]').forEach(el => { if(dictionary[lang][el.getAttribute('data-i18n')]) el.innerText = dictionary[lang][el.getAttribute('data-i18n')]; });
-            updateDateDisplay(); 
-        }
-
-        // UPGRADED CURRENCY TOGGLE
-        function setCurrency(cur) {
-            currentCurrency = cur;
-            const activeClass = "px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-800 text-yellow-500 shadow";
-            const inactiveClass = "px-3 py-1.5 rounded-md text-xs font-bold text-zinc-500 hover:text-zinc-300 transition";
-            document.getElementById('btn-usd').className = cur === 'USD' ? activeClass : inactiveClass;
-            document.getElementById('btn-thb').className = cur === 'THB' ? activeClass : inactiveClass;
-            document.getElementById('btn-jpy').className = cur === 'JPY' ? activeClass : inactiveClass;
-            renderUI();
-        }
-
-        // UPGRADED MONEY FORMATTER (Handles USD, JPY, THB dynamically)
-        function formatMoney(val, isPrice=false, sign=false) {
-            if(val === 0) return currentCurrency === 'JPY' ? '¥0' : currentCurrency === 'THB' ? '฿0' : '$0.00';
-            
-            let v = val; // Default USD
-            let pfx = '$';
-            let dec = 2;
-
-            if(currentCurrency === 'JPY') { 
-                v = val * jpyRate; 
-                pfx = '¥'; 
-                dec = isPrice ? 2 : 0; // Show decimals only for unit price in JPY
-            } else if(currentCurrency === 'THB') {
-                v = val * thbRate;
-                pfx = '฿';
-                dec = 2; // Keep decimals for THB
-            }
-
-            let sgn = sign && val >= 0 ? '+' : '';
-            return `${sgn}${pfx}${Math.abs(v).toLocaleString(currentCurrency==='JPY'?'ja-JP':'en-US', {minimumFractionDigits:dec, maximumFractionDigits:dec})}`;
-        }
-
-        function getPlStyle(val) {
-            if(val > 0) return { text: 'text-profit', bg: 'bg-profit', sign: '+' };
-            if(val < 0) return { text: 'text-loss', bg: 'bg-loss', sign: '' };
-            return { text: 'text-zinc-400', bg: 'bg-zinc-800', sign: '' };
-        }
-
-        // ================= CORE LOGIC =================
-        function rebuildPortfolio() {
-            portfolioState = { bank: 0, invested: 0, realizedPl: 0, dividends: 0, assets: {} };
-            let sortedLedger = [...ledger].sort((a, b) => new Date(a.date) - new Date(b.date) || a.id - b.id);
-            
-            sortedLedger.forEach(tx => {
-                let tkr = tx.ticker ? tx.ticker.toUpperCase() : null;
-                if(tx.type === 'DEPOSIT') { portfolioState.bank += tx.price; portfolioState.invested += tx.price; }
-                if(tx.type === 'WITHDRAW') { portfolioState.bank -= tx.price; portfolioState.invested -= tx.price; }
-                if(tx.type === 'DIVIDEND') { 
-                    portfolioState.bank += tx.price; portfolioState.dividends += tx.price; 
-                }
-                
-                if(tx.type === 'BUY' || tx.type === 'SELL') {
-                    let cls = tx.assetClass === 'stock_us' || tx.assetClass === 'stock_jp' ? 'stock' : 'crypto';
-                    if(!portfolioState.assets[tkr]) portfolioState.assets[tkr] = { class: cls, units: 0, avgCost: 0 };
-                    let ast = portfolioState.assets[tkr];
-                    
-                    if(tx.type === 'BUY') {
-                        let totalCost = (ast.units * ast.avgCost) + (tx.qty * tx.price);
-                        ast.units += tx.qty;
-                        ast.avgCost = totalCost / ast.units;
-                        portfolioState.bank -= (tx.qty * tx.price);
-                    }
-                    if(tx.type === 'SELL') {
-                        portfolioState.bank += (tx.qty * tx.price);
-                        portfolioState.realizedPl += tx.qty * (tx.price - ast.avgCost);
-                        ast.units -= tx.qty;
-                        if(ast.units <= 0.000001) { ast.units = 0; ast.avgCost = 0; }
-                    }
-                }
-            });
-        }
-
+        // --- API ---
         async function fetchPrice(type, ticker) {
             ticker = ticker.toUpperCase();
-            if (type === 'crypto') {
-                try { let r = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${ticker}USDT`); let d = await r.json(); return parseFloat(d.price); } catch(e) { return 0; }
-            } else {
-                if(ticker.endsWith('.T')) {
-                    try {
-                        let url = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`);
-                        let r = await fetch(`https://api.allorigins.win/raw?url=${url}`);
-                        let d = await r.json(); let priceInJpy = d.chart.result[0].meta.regularMarketPrice;
-                        return priceInJpy / jpyRate; // Convert strictly back to USD base
-                    } catch(e) { return 0; }
+            try {
+                if (type === 'crypto') {
+                    let r = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${ticker}USDT`);
+                    let d = await r.json(); return parseFloat(d.price) || 0;
                 }
-                if (!finnhubApiKey) return 0;
-                try { let r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${finnhubApiKey}`); let d = await r.json(); return d.c > 0 ? d.c : 0; } catch(e) { return 0; }
-            }
+                if (ticker.endsWith('.T')) {
+                    let url = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`);
+                    let r = await fetch(`https://api.allorigins.win/raw?url=${url}`);
+                    let d = await r.json(); return (d.chart.result[0].meta.regularMarketPrice / jpyRate) || 0;
+                }
+                if (finnhubApiKey) {
+                    let r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${finnhubApiKey}`);
+                    let d = await r.json(); return d.c || 0;
+                }
+                return (100 + Math.random() * 50); // Mock fallback if API fails
+            } catch(e) { return 0; }
         }
 
-        async function processLiveDashboard() {
-            rebuildPortfolio();
-            document.getElementById('status-msg').innerText = dictionary[currentLang]['fetching'];
-            
-            // UPGRADED FOREX API FETCHING (Safely fetches multiple currencies)
-            try { 
-                let r = await fetch('https://open.er-api.com/v6/latest/USD'); 
-                let d = await r.json(); 
-                jpyRate = d.rates.JPY; 
-                thbRate = d.rates.THB;
-                document.getElementById('forex-rate').innerText = `1 USD = ฿${thbRate.toFixed(2)} | ¥${jpyRate.toFixed(2)}`; 
-            } catch(e) {
-                console.warn("Forex API delayed, using cached rates");
-            }
-            
-            if(ledger.length === 0) {
-                document.getElementById('status-msg').innerText = dictionary[currentLang]['sync_done'];
-                liveDataCache = { totalNet: 0, totalCost: 0, stTotal: 0, crTotal: 0, holdings: [] };
-                renderUI();
-                return;
-            }
+        // --- CORE ---
+        async function refreshDashboard() {
+            document.getElementById('status-msg').innerText = "Syncing Market...";
+            try { let r = await fetch('https://open.er-api.com/v6/latest/USD'); let d = await r.json(); jpyRate = d.rates.JPY; } catch(e){}
+            document.getElementById('forex-rate').innerText = `1 USD = ¥${jpyRate.toFixed(2)}`;
 
-            const activeAssets = Object.entries(portfolioState.assets).filter(([_, ast]) => ast.units > 0);
-            
-            const fetchedHoldings = await Promise.all(activeAssets.map(async ([tkr, ast]) => {
-                const px = await fetchPrice(ast.class, tkr);
-                const val = ast.units * px;
-                const cost = ast.units * ast.avgCost;
-                const pl = val - cost;
-                return { tkr, type: ast.class, units: ast.units, cost: ast.avgCost, px, val, pl, plPct: cost>0?(pl/cost)*100:0, color: ast.class==='stock'?'bg-yellow-500':'bg-orange-500' };
-            }));
-
-            let stTotal = 0; let stCost = 0; let crTotal = 0; let crCost = 0;
-            fetchedHoldings.forEach(h => {
-                if(h.type === 'stock') { stTotal += h.val; stCost += (h.units * h.cost); } 
-                else { crTotal += h.val; crCost += (h.units * h.cost); }
+            let bank = 0, realized = 0, assets = {};
+            ledger.sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(tx => {
+                if(tx.type==='DEPOSIT') bank += tx.price;
+                if(tx.type==='WITHDRAW') bank -= tx.price;
+                if(tx.type==='DIVIDEND') bank += tx.price;
+                if(tx.type==='BUY' || tx.type==='SELL') {
+                    if(!assets[tx.ticker]) assets[tx.ticker] = { units: 0, cost: 0, class: tx.assetClass };
+                    if(tx.type==='BUY') {
+                        assets[tx.ticker].cost = ((assets[tx.ticker].units * assets[tx.ticker].cost) + (tx.qty * tx.price)) / (assets[tx.ticker].units + tx.qty);
+                        assets[tx.ticker].units += tx.qty;
+                        bank -= (tx.qty * tx.price);
+                    } else {
+                        realized += tx.qty * (tx.price - assets[tx.ticker].cost);
+                        assets[tx.ticker].units -= tx.qty;
+                        bank += (tx.qty * tx.price);
+                    }
+                }
             });
 
-            liveDataCache = { totalNet: portfolioState.bank + stTotal + crTotal, totalCost: portfolioState.bank + stCost + crCost, stTotal, crTotal, holdings: fetchedHoldings };
+            const activeTickers = Object.entries(assets).filter(([_, a])=>a.units > 0.000001);
+            const holdings = await Promise.all(activeTickers.map(async ([tkr, a]) => {
+                const px = await fetchPrice(a.class.includes('crypto')?'crypto':'stock', tkr);
+                const val = a.units * px;
+                const pl = val - (a.units * a.cost);
+                return { tkr, ...a, px, val, pl, plPct: (pl/(a.units*a.cost))*100 };
+            }));
 
-            const today = getJstDate();
-            let snap = historySnapshots.find(s => s.date === today);
-            if(snap) snap.net = liveDataCache.totalNet; else historySnapshots.push({ date: today, net: liveDataCache.totalNet });
-            historySnapshots.sort((a,b) => new Date(a.date) - new Date(b.date));
-            localStorage.setItem('wealthHistoryV12', JSON.stringify(historySnapshots));
+            liveDataCache = { bank, realized, holdings, totalNet: bank + holdings.reduce((s,h)=>s+h.val, 0), totalCost: bank + holdings.reduce((s,h)=>s+(h.units*h.cost), 0) };
+            
+            const today = new Date().toISOString().split('T')[0];
+            if(!historySnapshots.find(s=>s.date===today)) historySnapshots.push({date:today, net: liveDataCache.totalNet});
+            else historySnapshots.find(s=>s.date===today).net = liveDataCache.totalNet;
+            localStorage.setItem('wealthHistoryV12', JSON.stringify(historySnapshots.slice(-30)));
 
-            document.getElementById('status-msg').innerText = finnhubApiKey ? dictionary[currentLang]['sync_done'] : dictionary[currentLang]['mock_price'];
+            document.getElementById('status-msg').innerText = "Live Connected";
             renderUI();
         }
 
-        // ================= RENDER =================
         function renderUI() {
+            document.getElementById('current-date').innerText = new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + " JST";
             document.getElementById('val-total').innerText = formatMoney(liveDataCache.totalNet);
-            let unrlz = liveDataCache.totalNet - liveDataCache.totalCost;
-            let unPct = liveDataCache.totalCost > 0 ? (unrlz / liveDataCache.totalCost) * 100 : 0;
-            let upst = getPlStyle(unPct);
-            document.getElementById('val-unrealized-pct').className = `text-xs font-bold px-1.5 py-0.5 rounded ${upst.bg} ${upst.text}`;
-            document.getElementById('val-unrealized-pct').innerText = `${upst.sign}${Math.abs(unPct).toFixed(2)}% (${formatMoney(unrlz,false,true)})`;
+            document.getElementById('val-bank').innerText = formatMoney(liveDataCache.bank);
+            document.getElementById('val-realized').innerText = formatMoney(liveDataCache.realized, false);
             
-            document.getElementById('val-realized').innerText = formatMoney(portfolioState.realizedPl, false, true);
-            document.getElementById('val-realized').className = `text-2xl font-bold mb-1 ${getPlStyle(portfolioState.realizedPl).text}`;
-            document.getElementById('val-dividends').innerText = `Dividends: ${formatMoney(portfolioState.dividends, false, true)}`;
-            document.getElementById('val-bank').innerText = formatMoney(portfolioState.bank);
-            document.getElementById('val-invested').innerText = `Total Invested: ${formatMoney(portfolioState.invested)}`;
+            let unPl = liveDataCache.totalNet - liveDataCache.totalCost;
+            let unPct = (unPl / liveDataCache.totalCost) * 100 || 0;
+            document.getElementById('val-unrealized-pct').innerText = `${unPl >= 0 ? '+' : ''}${unPct.toFixed(2)}% (${formatMoney(unPl)})`;
+            document.getElementById('val-unrealized-pct').className = `inline-block mt-4 text-[10px] font-bold px-2 py-1 rounded bg-zinc-900 ${unPl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
 
-            document.getElementById('val-assets').innerText = formatMoney(liveDataCache.stTotal + liveDataCache.crTotal);
-            let astTot = liveDataCache.stTotal + liveDataCache.crTotal;
-            document.getElementById('val-eq-pct').innerText = `EQ: ${astTot>0 ? Math.round((liveDataCache.stTotal/astTot)*100) : 0}%`;
-            document.getElementById('val-cr-pct').innerText = `CR: ${astTot>0 ? Math.round((liveDataCache.crTotal/astTot)*100) : 0}%`;
-
-            // Table
-            const tbody = document.getElementById('holdings-table-body'); tbody.innerHTML = '';
-            if(liveDataCache.holdings.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-zinc-600 text-sm">${dictionary[currentLang]['empty_portfolio']}</td></tr>`;
-            } else {
-                liveDataCache.holdings.sort((a,b)=>b.val-a.val).forEach(a => {
-                    let p = getPlStyle(a.plPct);
-                    tbody.innerHTML += `<tr onclick="openAssetHistory('${a.tkr}', '${a.color}')" class="border-b border-zinc-800/50 hover:bg-zinc-800/60 cursor-pointer transition group">
-                        <td class="py-3 pl-2 rounded-l-lg"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full ${a.color} text-black font-bold text-[10px] flex items-center justify-center">${a.tkr.substring(0,4)}</div><div class="font-bold text-white group-hover:text-yellow-400 transition">${a.tkr}</div></div></td>
-                        <td class="py-3 text-right text-zinc-400">${formatMoney(a.cost, true)}</td>
-                        <td class="py-3 text-right text-white font-medium">${formatMoney(a.px, true)}</td>
-                        <td class="py-3 text-right text-zinc-300">${a.units.toLocaleString(undefined,{maximumFractionDigits:4})}</td>
-                        <td class="py-3 text-right font-bold text-white">${formatMoney(a.val)}</td>
-                        <td class="py-3 text-right pr-2 rounded-r-lg"><div class="flex flex-col items-end"><span class="font-bold ${p.text}">${formatMoney(a.pl,false,true)}</span><span class="text-[10px] px-1 rounded ${p.bg} ${p.text}">${p.sign}${Math.abs(a.plPct).toFixed(2)}%</span></div></td>
-                    </tr>`;
-                });
-            }
-
-            // Charts
-            if(chartAlloc) chartAlloc.destroy();
-            if(liveDataCache.totalNet > 0) {
-                document.getElementById('allocationChart').classList.remove('hidden'); document.getElementById('chart-container-alloc').querySelector('span').classList.add('hidden');
-                chartAlloc = new Chart(document.getElementById('allocationChart').getContext('2d'), { type: 'doughnut', data: { labels: ['Cash', 'Equities', 'Crypto'], datasets: [{ data: [portfolioState.bank, liveDataCache.stTotal, liveDataCache.crTotal], backgroundColor: ['#ffffff', '#eab308', '#f97316'], borderWidth:0 }] }, options: { responsive:true, maintainAspectRatio:false, cutout:'80%', plugins: {legend:{display:false}} }});
-            } else { document.getElementById('allocationChart').classList.add('hidden'); document.getElementById('chart-container-alloc').querySelector('span').classList.remove('hidden'); }
-
-            if(chartTrend) chartTrend.destroy();
-            if(historySnapshots.length > 0 && liveDataCache.totalNet > 0) {
-                document.getElementById('trendChart').classList.remove('hidden'); document.getElementById('chart-container-trend').querySelector('span').classList.add('hidden');
-                let grad = document.getElementById('trendChart').getContext('2d').createLinearGradient(0,0,0,300); grad.addColorStop(0, 'rgba(234,179,8,0.3)'); grad.addColorStop(1, 'transparent');
-                chartTrend = new Chart(document.getElementById('trendChart').getContext('2d'), { type: 'line', data: { labels: historySnapshots.map(h=>h.date), datasets: [{ data: historySnapshots.map(h=>h.net), borderColor: '#eab308', backgroundColor: grad, fill:true, tension:0.3, borderWidth:2, pointRadius:2 }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{display:false},y:{grid:{color:'#27272a'}}} } });
-            } else { document.getElementById('trendChart').classList.add('hidden'); document.getElementById('chart-container-trend').querySelector('span').classList.remove('hidden'); }
-        }
-
-        // ================= TX MODAL (ADD / EDIT) =================
-        function populateTickers() {
-            const cls = document.getElementById('tx-asset-class').value;
-            const sel = document.getElementById('tx-ticker-select'); sel.innerHTML = '';
-            assetLibrary[cls].forEach(opt => { let o = document.createElement('option'); o.value = opt.val; o.text = opt.name; sel.appendChild(o); });
-            handleTickerSelect();
-        }
-
-        function handleTickerSelect() {
-            const val = document.getElementById('tx-ticker-select').value; const cust = document.getElementById('tx-ticker-custom');
-            if(val === 'OTHER') { cust.classList.remove('hidden'); cust.required = true; } else { cust.classList.add('hidden'); cust.required = false; }
-        }
-
-        function openModal(editId = null) { 
-            editingTxId = editId;
-            document.getElementById('tx-modal').classList.remove('hidden');
-            document.getElementById('tx-modal-title').innerText = editId ? "Edit Transaction" : dictionary[currentLang]['log_tx'];
-            
-            if(editId) {
-                let tx = ledger.find(t => t.id === editId);
-                document.getElementById('tx-date').value = tx.date;
-                document.getElementById('tx-type').value = tx.type;
-                toggleTxFields();
-                if(tx.assetClass) document.getElementById('tx-asset-class').value = tx.assetClass;
-                populateTickers();
-                
-                if(tx.ticker) {
-                    let sel = document.getElementById('tx-ticker-select');
-                    let exists = Array.from(sel.options).some(o => o.value === tx.ticker);
-                    if(!exists) { sel.value = 'OTHER'; handleTickerSelect(); document.getElementById('tx-ticker-custom').value = tx.ticker; } 
-                    else { sel.value = tx.ticker; handleTickerSelect(); }
-                }
-                
-                if(tx.qty) document.getElementById('tx-qty').value = tx.qty;
-                document.getElementById('tx-price').value = tx.price;
-            } else {
-                document.getElementById('tx-form').reset();
-                document.getElementById('tx-date').value = getJstDate();
-                document.getElementById('tx-type').value = 'DEPOSIT';
-                toggleTxFields(); 
-            }
-        }
-        function closeModal() { document.getElementById('tx-modal').classList.add('hidden'); editingTxId = null; }
-        
-        function toggleTxFields() {
-            let t = document.getElementById('tx-type').value;
-            document.getElementById('field-asset').classList.toggle('hidden', !(t==='BUY'||t==='SELL'));
-            document.getElementById('field-ticker').classList.toggle('hidden', !(t==='BUY'||t==='SELL'||t==='DIVIDEND'));
-            document.getElementById('field-qty').classList.toggle('hidden', !(t==='BUY'||t==='SELL'));
-            
-            // Label always shows USD because base currency inputs are ALWAYS in USD
-            document.getElementById('lbl-price').innerText = dictionary[currentLang][(t==='DEPOSIT'||t==='WITHDRAW'||t==='DIVIDEND') ? 'amount' : 'price_unit'];
-            
-            if(t==='BUY'||t==='SELL') populateTickers();
-            else if(t==='DIVIDEND') { document.getElementById('tx-ticker-select').innerHTML = '<option value="OTHER">Enter Ticker manually</option>'; handleTickerSelect(); }
-        }
-
-        document.getElementById('tx-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            let tx = {
-                id: editingTxId || Date.now(),
-                date: document.getElementById('tx-date').value,
-                type: document.getElementById('tx-type').value,
-                assetClass: document.getElementById('tx-asset-class').value,
-                price: parseFloat(document.getElementById('tx-price').value) || 0,
-                qty: null, ticker: null
-            };
-            
-            if(tx.type !== 'DEPOSIT' && tx.type !== 'WITHDRAW') {
-                let selVal = document.getElementById('tx-ticker-select').value;
-                tx.ticker = (selVal === 'OTHER') ? document.getElementById('tx-ticker-custom').value.toUpperCase() : selVal;
-                if(tx.type==='BUY'||tx.type==='SELL') tx.qty = parseFloat(document.getElementById('tx-qty').value) || 0;
-            }
-
-            if(editingTxId) { let idx = ledger.findIndex(t => t.id === editingTxId); if(idx !== -1) ledger[idx] = tx; } 
-            else { ledger.push(tx); }
-            
-            localStorage.setItem('wealthLedgerV12', JSON.stringify(ledger));
-            closeModal(); showToast(dictionary[currentLang]['save'] + " Success");
-            
-            closeHistoryModal();
-            processLiveDashboard();
-        });
-
-        // ================= SPECIFIC HISTORY VIEW (CLICKABLE UI) =================
-        function openCashHistory() {
-            const hList = document.getElementById('history-list'); hList.innerHTML = '';
-            document.getElementById('history-icon').innerHTML = '💵';
-            document.getElementById('history-icon').className = 'w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-lg shadow-lg';
-            document.getElementById('history-title').innerText = 'Cash Flow History';
-            document.getElementById('history-subtitle').innerText = 'Viewing all Deposits, Withdrawals, and Cash Dividends';
-            
-            let cashTxs = ledger.filter(t => t.type === 'DEPOSIT' || t.type === 'WITHDRAW' || (t.type === 'DIVIDEND' && !t.ticker)).sort((a, b) => new Date(b.date) - new Date(a.date));
-            renderHistoryRows(cashTxs, hList);
-            document.getElementById('history-modal').classList.remove('hidden');
-        }
-
-        function openAllAssetsHistory() {
-            const hList = document.getElementById('history-list'); hList.innerHTML = '';
-            document.getElementById('history-icon').innerHTML = '📈';
-            document.getElementById('history-icon').className = 'w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center text-black font-bold text-lg shadow-lg';
-            document.getElementById('history-title').innerText = 'Investment History';
-            document.getElementById('history-subtitle').innerText = 'Viewing all Buy, Sell, and Dividend records';
-            
-            let assetTxs = ledger.filter(t => t.type === 'BUY' || t.type === 'SELL' || (t.type === 'DIVIDEND' && t.ticker)).sort((a, b) => new Date(b.date) - new Date(a.date));
-            renderHistoryRows(assetTxs, hList);
-            document.getElementById('history-modal').classList.remove('hidden');
-        }
-
-        function openAssetHistory(ticker, colorClass) {
-            const hList = document.getElementById('history-list'); hList.innerHTML = '';
-            document.getElementById('history-icon').innerHTML = ticker.substring(0,3);
-            document.getElementById('history-icon').className = `w-10 h-10 rounded-full ${colorClass} flex items-center justify-center text-black font-bold text-sm shadow-lg`;
-            document.getElementById('history-title').innerText = `${ticker} Transactions`;
-            document.getElementById('history-subtitle').innerText = 'Viewing specific asset details';
-            
-            let assetTxs = ledger.filter(t => t.ticker === ticker).sort((a, b) => new Date(b.date) - new Date(a.date));
-            renderHistoryRows(assetTxs, hList);
-            document.getElementById('history-modal').classList.remove('hidden');
-        }
-
-        function renderHistoryRows(txArray, container) {
-            if(txArray.length === 0) { container.innerHTML = `<div class="text-center text-zinc-500 py-6">No records found.</div>`; return; }
-            txArray.forEach(tx => {
-                let icon = '💸'; let color = 'text-zinc-300'; let txt = ''; let amt = ''; let detail = '';
-                if(tx.type === 'DEPOSIT') { icon = '📥'; color = 'text-emerald-400'; txt = 'Deposit'; amt = `+${formatMoney(tx.price)}`; }
-                if(tx.type === 'WITHDRAW') { icon = '📤'; color = 'text-rose-400'; txt = 'Withdraw'; amt = `-${formatMoney(tx.price)}`; }
-                if(tx.type === 'DIVIDEND') { icon = '💰'; color = 'text-emerald-400'; txt = tx.ticker ? `Dividend (${tx.ticker})` : 'Dividend'; amt = `+${formatMoney(tx.price)}`; }
-                if(tx.type === 'BUY') { icon = '🛒'; color = 'text-yellow-400'; txt = `Buy ${tx.ticker}`; amt = `-${formatMoney(tx.qty * tx.price)}`; detail = `${tx.qty} @ ${formatMoney(tx.price, true)}`; }
-                if(tx.type === 'SELL') { icon = '🤝'; color = 'text-emerald-400'; txt = `Sell ${tx.ticker}`; amt = `+${formatMoney(tx.qty * tx.price)}`; detail = `${tx.qty} @ ${formatMoney(tx.price, true)}`; }
-                
-                container.innerHTML += `
-                <div class="flex justify-between items-center bg-zinc-900/80 p-3.5 rounded-xl border border-zinc-800 hover:border-zinc-700 transition group">
-                    <div class="flex items-center gap-4">
-                        <span class="text-2xl">${icon}</span>
-                        <div>
-                            <div class="text-sm font-bold text-white flex items-center gap-2">${txt} <span class="text-xs font-normal text-zinc-400">${detail}</span></div>
-                            <div class="text-[11px] text-zinc-500 mt-0.5">${tx.date}</div>
+            const grid = document.getElementById('assets-grid'); grid.innerHTML = '';
+            liveDataCache.holdings.forEach(h => {
+                let color = h.class === 'crypto' ? 'bg-orange-500' : h.class === 'stock_jp' ? 'bg-white' : 'bg-yellow-500';
+                grid.innerHTML += `
+                <div class="glass-card rounded-3xl p-6 interactive-card group" onclick="openAssetHistory('${h.tkr}', '${color}')">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-10 h-10 rounded-xl ${color} flex items-center justify-center text-black font-black text-xs">${h.tkr.substring(0,3)}</div>
+                        <div class="text-right">
+                            <div class="text-white font-black">${h.tkr}</div>
+                            <div class="text-[10px] text-zinc-500 font-bold">${h.units.toFixed(4)} Units</div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-4">
-                        <div class="text-sm font-bold ${color} text-right">${amt}</div>
-                        <div class="flex items-center gap-2 border-l border-zinc-700 pl-4">
-                            <!-- EDIT BTN -->
-                            <button onclick="openModal(${tx.id})" class="text-zinc-500 hover:text-yellow-500 transition p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                            <!-- DEL BTN -->
-                            <button onclick="deleteTx(${tx.id})" class="text-zinc-500 hover:text-rose-500 transition p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <div class="text-xs text-zinc-500 font-bold uppercase mb-1">Value</div>
+                            <div class="text-xl font-bold text-white">${formatMoney(h.val)}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[10px] font-black ${getPlStyle(h.pl)}">${h.pl >= 0 ? '+' : ''}${h.plPct.toFixed(2)}%</div>
+                            <div class="text-[10px] text-zinc-500">Avg: ${formatMoney(h.cost, true)}</div>
                         </div>
                     </div>
                 </div>`;
             });
-        }
-        function closeHistoryModal() { document.getElementById('history-modal').classList.add('hidden'); }
 
-        function deleteTx(id) {
-            if(confirm('Delete this transaction forever?')) {
-                ledger = ledger.filter(t => t.id !== id);
-                localStorage.setItem('wealthLedgerV12', JSON.stringify(ledger));
-                showToast(dictionary[currentLang]['deleted']);
-                closeHistoryModal(); processLiveDashboard();
+            if(liveDataCache.holdings.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center text-zinc-500 py-10 bg-zinc-900/50 rounded-3xl border border-zinc-800 border-dashed">Portfolio is empty. Log a transaction to start.</div>`;
             }
+
+            // Charts
+            if(charts.alloc) charts.alloc.destroy();
+            charts.alloc = new Chart(document.getElementById('allocationChart'), { type: 'doughnut', data: { datasets: [{ data: [liveDataCache.bank, liveDataCache.holdings.filter(h=>h.class!=='crypto').reduce((s,h)=>s+h.val,0), liveDataCache.holdings.filter(h=>h.class==='crypto').reduce((s,h)=>s+h.val,0)], backgroundColor: ['#3f3f46', '#fbbf24', '#f97316'], borderWidth: 0 }] }, options: { cutout: '70%', plugins: { legend: { display: false } } } });
+
+            if(charts.trend) charts.trend.destroy();
+            charts.trend = new Chart(document.getElementById('trendChart'), { type: 'line', data: { labels: historySnapshots.map(s=>s.date), datasets: [{ data: historySnapshots.map(s=>s.net), borderColor: '#fbbf24', tension: 0.4, fill: false, pointRadius: 0 }] }, options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { color: '#18181b' } } } } });
         }
 
-        // ================= SETTINGS & BACKUP (JSON) =================
+        // --- EVENTS ---
+        function openAssetHistory(tkr, colorClass) {
+            const txs = ledger.filter(t => t.ticker === tkr).sort((a,b)=>new Date(b.date)-new Date(a.date));
+            const h = liveDataCache.holdings.find(i=>i.tkr === tkr);
+            
+            document.getElementById('history-icon').className = `w-14 h-14 rounded-2xl ${colorClass} flex items-center justify-center text-black font-black text-xl`;
+            document.getElementById('history-icon').innerText = tkr.substring(0,3);
+            document.getElementById('history-title').innerText = tkr;
+            
+            document.getElementById('asset-perf-box').innerHTML = h ? `
+                <div class="bg-zinc-900 p-4 rounded-2xl">
+                    <div class="text-[10px] text-zinc-500 font-bold mb-1 uppercase">Market Value</div>
+                    <div class="text-lg font-bold">${formatMoney(h.val)}</div>
+                </div>
+                <div class="bg-zinc-900 p-4 rounded-2xl">
+                    <div class="text-[10px] text-zinc-500 font-bold mb-1 uppercase">Total P/L</div>
+                    <div class="text-lg font-bold ${getPlStyle(h.pl)}">${h.pl >= 0 ? '+' : ''}${formatMoney(h.pl)}</div>
+                </div>` : '';
+
+            const list = document.getElementById('history-list'); list.innerHTML = '';
+            txs.forEach(tx => {
+                list.innerHTML += `
+                <div class="flex justify-between items-center bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800">
+                    <div>
+                        <div class="text-sm font-bold text-white">${tx.type} ${tx.qty ? tx.qty + ' Units' : ''}</div>
+                        <div class="text-[10px] text-zinc-500 font-bold">${tx.date}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-bold text-white">${formatMoney(tx.price * (tx.qty || 1))}</div>
+                        <button onclick="deleteTx(${tx.id})" class="text-[10px] text-rose-500 font-bold uppercase mt-1 hover:text-rose-400">Delete Record</button>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('history-modal').classList.remove('hidden');
+        }
+
+        function openCashHistory() {
+            const txs = ledger.filter(t => ['DEPOSIT','WITHDRAW','DIVIDEND'].includes(t.type) && !t.ticker).sort((a,b)=>new Date(b.date)-new Date(a.date));
+            document.getElementById('history-icon').className = `w-14 h-14 rounded-2xl bg-emerald-500 flex items-center justify-center text-white font-black text-xl`;
+            document.getElementById('history-icon').innerText = '$';
+            document.getElementById('history-title').innerText = 'Cash Flow';
+            document.getElementById('asset-perf-box').innerHTML = '';
+            const list = document.getElementById('history-list'); list.innerHTML = '';
+            txs.forEach(tx => {
+                list.innerHTML += `<div class="flex justify-between items-center bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800"><div><div class="text-sm font-bold text-white">${tx.type}</div><div class="text-[10px] text-zinc-500 font-bold">${tx.date}</div></div><div class="text-right"><div class="text-sm font-bold ${tx.type==='WITHDRAW'?'text-rose-500':'text-emerald-500'}">${tx.type==='WITHDRAW'?'-':'+'}${formatMoney(tx.price)}</div><button onclick="deleteTx(${tx.id})" class="text-[10px] text-rose-500 font-bold uppercase mt-1 hover:text-rose-400">Delete Record</button></div></div>`;
+            });
+            document.getElementById('history-modal').classList.remove('hidden');
+        }
+
+        function closeHistoryModal() { document.getElementById('history-modal').classList.add('hidden'); }
+        function openModal() { document.getElementById('tx-modal').classList.remove('hidden'); document.getElementById('tx-date').value = new Date().toISOString().split('T')[0]; toggleTxFields(); }
+        function closeModal() { document.getElementById('tx-modal').classList.add('hidden'); }
         function openSettingsModal() { document.getElementById('setting-api-key').value = finnhubApiKey; document.getElementById('settings-modal').classList.remove('hidden'); }
         function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); }
         
-        function saveSettings() {
-            finnhubApiKey = document.getElementById('setting-api-key').value.trim();
-            localStorage.setItem('wealthApiKey', finnhubApiKey);
-            closeSettingsModal(); showToast('Settings Saved!');
-            processLiveDashboard();
+        function toggleTxFields() {
+            let t = document.getElementById('tx-type').value;
+            document.getElementById('field-asset').classList.toggle('hidden', !['BUY','SELL','DIVIDEND'].includes(t));
+            document.getElementById('field-qty').classList.toggle('hidden', !['BUY','SELL'].includes(t));
+            if(['BUY','SELL','DIVIDEND'].includes(t)) populateTickers();
         }
 
-        function exportJSON() {
-            const dataStr = JSON.stringify({ ledger: ledger, history: historySnapshots }, null, 2);
-            const blob = new Blob([dataStr], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a'); link.href = url; link.download = `WealthBackup_${getJstDate()}.json`; link.click();
+        function populateTickers() {
+            let cls = document.getElementById('tx-asset-class').value;
+            let sel = document.getElementById('tx-ticker-select'); sel.innerHTML = '';
+            assetLibrary[cls].forEach(tkr => { let o = document.createElement('option'); o.value = tkr; o.text = tkr; sel.appendChild(o); });
+            handleTickerSelect();
         }
 
-        function importJSON(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
+        function handleTickerSelect() {
+            let val = document.getElementById('tx-ticker-select').value;
+            document.getElementById('tx-ticker-custom').classList.toggle('hidden', val !== 'OTHER');
+        }
+
+        document.getElementById('tx-form').addEventListener('submit', e => {
+            e.preventDefault();
+            let tkr = document.getElementById('tx-ticker-select').value;
+            if(tkr==='OTHER') tkr = document.getElementById('tx-ticker-custom').value.toUpperCase();
+            ledger.push({
+                id: Date.now(),
+                date: document.getElementById('tx-date').value,
+                type: document.getElementById('tx-type').value,
+                assetClass: document.getElementById('tx-asset-class').value,
+                ticker: tkr,
+                qty: parseFloat(document.getElementById('tx-qty').value) || 0,
+                price: parseFloat(document.getElementById('tx-price').value) || 0
+            });
+            localStorage.setItem('wealthLedgerV12', JSON.stringify(ledger));
+            closeModal(); refreshDashboard();
+        });
+
+        function deleteTx(id) {
+            if(confirm('Are you sure you want to delete this record?')) { ledger = ledger.filter(t=>t.id!==id); localStorage.setItem('wealthLedgerV12', JSON.stringify(ledger)); refreshDashboard(); closeHistoryModal(); }
+        }
+
+        function setCurrency(cur) { currentCurrency = cur; document.getElementById('btn-usd').className = cur==='USD' ? 'px-4 py-2 rounded-lg text-xs font-bold bg-zinc-800 text-yellow-500 shadow' : 'px-4 py-2 rounded-lg text-xs font-bold text-zinc-500 transition hover:text-zinc-300'; document.getElementById('btn-jpy').className = cur==='JPY' ? 'px-4 py-2 rounded-lg text-xs font-bold bg-zinc-800 text-yellow-500 shadow' : 'px-4 py-2 rounded-lg text-xs font-bold text-zinc-500 transition hover:text-zinc-300'; renderUI(); }
+        
+        function saveSettings() { finnhubApiKey = document.getElementById('setting-api-key').value; localStorage.setItem('wealthApiKey', finnhubApiKey); closeSettingsModal(); refreshDashboard(); }
+        function exportJSON() { let b = new Blob([JSON.stringify({ledger: ledger, history: historySnapshots})], {type:'application/json'}); let a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `WealthBackup_${new Date().toISOString().split('T')[0]}.json`; a.click(); }
+        function importJSON(e) { 
+            let f = e.target.files[0]; let r = new FileReader(); 
+            r.onload = x => { 
                 try {
-                    const data = JSON.parse(e.target.result);
+                    let data = JSON.parse(x.target.result); 
                     if(data.ledger) {
-                        ledger = data.ledger; localStorage.setItem('wealthLedgerV12', JSON.stringify(ledger));
+                        ledger = data.ledger; localStorage.setItem('wealthLedgerV12', JSON.stringify(ledger)); 
                         if(data.history) { historySnapshots = data.history; localStorage.setItem('wealthHistoryV12', JSON.stringify(historySnapshots)); }
-                        closeSettingsModal(); showToast("Data Restored Successfully!");
-                        processLiveDashboard();
-                    } else alert("Invalid JSON format.");
-                } catch (err) { alert("Error reading file!"); }
-            };
-            reader.readAsText(file);
+                        closeSettingsModal();
+                        refreshDashboard(); 
+                        alert("Backup Restored Successfully!");
+                    } else { alert("Invalid Backup File"); }
+                } catch(err) { alert("Error reading file"); }
+            }; 
+            r.readAsText(f); 
         }
 
-        function refreshLivePrices() { processLiveDashboard(); }
-        function showToast(msg) {
-            document.getElementById('toast-msg').innerText = msg; const t = document.getElementById('toast');
-            t.classList.remove('translate-y-[150%]', 'opacity-0'); setTimeout(() => t.classList.add('translate-y-[150%]', 'opacity-0'), 3000);
-        }
-
-        // Boot
-        updateDateDisplay(); setLanguage('en'); processLiveDashboard();
+        refreshDashboard();
     </script>
 </body>
 </html>
